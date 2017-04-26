@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# This source file contains the Palander submission script base, to be used in
+# conjunction with the Blender add-on palander_addon.py, the simulation engine
+# palander_engine.cpp and the remote running script palander_remoterun.sh. All
+# files are available at
+# <https://github.com/FilmakademieRnD/Palander>
+#
+# Copyright (c) 2017 Animationsinstitut, Filmakademie Baden-Wuerttemberg
+# <http://research.animationsinstitut.de/>
+#
+# This project has been realized in the scope of the Media Solution Center
+# project, funded by the state of Baden-Wuerttemberg, Germany:
+# <http://msc-bw.de/en>
+#
+# While it is meant to work with the open-source programs Palabos and Blender,
+# this file is not dependent on either program. Therefore, this file is released
+# under the Beerware License, Revision 42:
+#
+# "THE BEER-WARE LICENSE" (Revision 42):
+# <ari.harjunmaa@filmakademie.de> wrote this file. As long as you retain this notice
+# you can do whatever you want with this stuff. If we meet some day, and you think
+# this stuff is worth it, you can buy me a beer in return.  - Ari Harjunmaa
+#
+
+#PBS -N palander
+#PBS -q BASE_QUEUE
+#PBS -l nodes=BASE_NODES:ppn=24
+#PBS -l walltime=BASE_TIME
+
+cd $PBS_O_WORKDIR
+index=$(date +%H%M%S)
+WDIR=$(ws_allocate Palander_$index 10)
+cp -r * $WDIR
+
+cd $WDIR
+aprun -n BASE_CPUS -N 24 -j 1 palander_engine > palander.out 2>&1
+cp tmp/* $PBS_O_WORKDIR/tmp

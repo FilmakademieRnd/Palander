@@ -1,0 +1,379 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+
+\newcommand{\eg}{\emph{e.g.\ }}
+\newcommand{\ie}{\emph{i.e.\ }}
+
+\addtolength{\hoffset}{-1cm}
+\addtolength{\voffset}{-1cm}
+\addtolength{\textwidth}{2cm}
+\addtolength{\textheight}{2cm}
+
+\setlength{\parskip}{\baselineskip}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+\section{Introduction}
+
+This is a user's manual for Palander, the Blender add-on for running the Palabos simulation engine. It 
+provides instructions for how to install and use the program, as well as a simple tutorial to get the reader 
+started on how to use it as well as Blender in general. Some knowledge of Linux basics like compiling and 
+\verb|ssh| is recommended to increase the likelihood of a successful installation.
+
+Both Palabos and Blender are open-source tools. In the same spirit, the files of this program are also 
+released as open-source under the conditions of the following licenses:
+\begin{description}
+\item[GNU GPLv3] for file \verb|palander_addon.py|;
+\item[GNU AGPLv3] for file \verb|palander_engine.cpp|; and
+\item[Beerware License rev. 42] for files \verb|palander_remoterun.sh| and \verb|palander_scriptbase|.
+\end{description}
+
+Palander is provided ``as is'', and it will most likely not work perfectly for all possible scene setups. 
+Palabos is more of a scientific/engineering tool than a content creation engine. Its main mode of usage is to 
+optimize an executable \emph{for each use case separately}. This means that this program, which is intended 
+as a general tool, must make compromises as to speed, stability, etc. in order to work sufficiently well for 
+as many use cases as possible. If you think you know what you're doing, you're invited to try to optimize the 
+executable for your own specific setups; however, control of most of the relevant parameters is already 
+offered through the add-on.
+
+Palander is Copyright \copyright{} 2017 Animationsinstitut, Filmakademie Baden-Wuerttemberg. It has been 
+realized in the scope of the Media Solution Center project, funded by the state of Baden-Wuerttemberg, 
+Germany.
+
+\newpage
+
+\section{Installing Palander}
+
+Palander is not a single piece of code, but rather an entity based on the established open-source programs 
+Palabos and Blender. This entity consists of the following five parts:
+\begin{enumerate}
+\item a copy of Blender,
+\item \verb|palander_addon.py|, a Python add-on to be installed on top of Blender,
+\item \verb|palander_engine.cpp|, a Palabos executable,
+\item \verb|palander_remoterun.sh|, a remote running script accessed on Hazel Hen by the add-on, and
+\item \verb|palander_scriptbase|, a submission script base for the Hazel Hen batch system.
+\end{enumerate}
+It is recommended to compile the Palabos executable yourself for your desired platform; a Makefile is 
+provided for compilation on Linux computers. Palabos is primarily intended for parallel use on clusters, 
+which is why its primary platform is Linux. However, it has also been tested and found to work on Windows, 
+albeit not without difficulties in compiling. Pre-compiled executables may be available (without guarantee!) 
+for specific platforms --- please inquire the authors.
+
+The instructions below are first for desktop usage; subsection~\ref{install_cluster} is necessary only if you 
+wish to run your simulations on the Hazel Hen supercomputer. Likewise, compiling and installing the Palabos 
+executable on your desktop is not necessary if you only wish to run your (Palabos) simulations on the 
+supercomputer. In this case, you can make test simulations using Blender's native fluid simulation engine, 
+but please keep in mind that the results might differ considerably from the Palabos simulations.
+
+More in-depth instructions for installing Palabos can be found at the Palabos website under 
+\verb|http://www.palabos.org/documentation/userguide/getting-started.html|.
+
+\subsection{Installing Blender}
+
+Installing Blender is very straightforward: go to \verb|https://www.blender.org/download|, choose your 
+platform, and click on a link to download. Install using the instructions provided on the website.
+
+\subsection{Installing the Blender Add-On}
+
+Palander's Blender add-on is named \verb|palander_addon.py|. To install it, follow these steps:
+\begin{enumerate}
+\item Start Blender.
+\item Go to {\bf File $\to$ User Preferences $\to$ Add-ons}.
+\item Make sure that the level ``Community'' is supported.
+\item Click on ``Install from File'' and locate the file in question.
+\item In section ``Import-Export'', locate ``Palander'' and checkmark it.
+\item Click on ``Save User Settings''.
+\end{enumerate}
+The last two steps are necessary for the add-on to be loaded upon each startup of Blender. To verify that 
+installation was successful, make sure that there is a new tab named ``Palander'' at the bottom of the tab 
+column on the left-hand side of the Blender window. As with any modifications to the add-on, you might need 
+to restart Blender for the changes to take effect.
+
+If you wish to modify the python add-on yourself after installation, you can simply copy the new version into 
+Blender's add-on directory. For Linux, this should be something like 
+$\sim$\verb|/.config/blender/2.78/scripts/addons|.
+
+\subsection{Installing the Palabos Library} \label{install_lib}
+
+If you don't have a pre-compiled Palabos executable, you need to compile one yourself. For this, you first 
+need to install the Palabos library. Officially, you can download this library at 
+\verb|https://www.palabos.org/download-ql|. However, the current (as of April, 2017) newest official release 
+version, v1.5r1, is incompatible with Palander; improvements have since then been made to the library without 
+its being released, and a newer version that is actually compatible is available from the authors of 
+Palander, and is distributed with this installation. Future official releases of Palabos should also be 
+compatible with Palander, and their use is recommended once they become available.
+
+Either way, you should obtain a ZIP file of the Palabos library. Simply unzip it and make sure that you are 
+satisfied with the location into which the library directory is uncompressed.
+
+\subsection{Compiling and Installing the Palabos Executable (Linux)} \label{install_linux}
+
+Palander comes with the Palabos program file \verb|palander_engine.cpp| and its Makefile. Place these in a 
+directory that you wish to use to store your simulation output. Then, modify the Makefile by changing the 
+following settings as required:
+\begin{itemize}
+\item \verb|palabosRoot|: set this to the root directory where you installed the Palabos library
+\item \verb|MPIparallel| (default {\bf true}): change this to {\bf false} if you intend to run Palabos on 
+your local computer without installing MPI
+\item \verb|libraryPaths|: set this to the \verb|externalLibraries| subdirectory of your Palabos installation 
+directory
+\item \verb|serialCXX| (default {\bf g++}): change this to your serial compiler of choice
+\item \verb|parallelCXX| (default {\bf mpicxx}): change this to your parallel compiler of choice
+\end{itemize}
+In addition, you may want to change the number of compiler threads in the \verb|SCons| definition (parameter 
+-j, default {\bf 4}).
+
+After making these modifications, you are ready to compile the Palander engine. In Linux, you can do this 
+with the command \verb|make| in the directory where you have the files \verb|palander_engine.cpp| and 
+\verb|Makefile|. It will take a few minutes to compile all of the necessary library functions for the first 
+time, but after this, re-compiling after any modifications to \verb|palander_engine.cpp| will take a much 
+shorter amount of time. After compiling, you will have an executable called \verb|palander_engine|, which the 
+add-on will call from inside Blender when requested to perform a simulation using Palabos.
+
+\subsection{Compiling the Palabos Executable (Mac OS X)}
+
+According to the makers of Palabos, compiling a Palabos executable should work the same way under Mac OS X as 
+under Linux. You simply need to find a \verb|gcc|-compatible compiler such as \verb|xcode| and use the 
+compiler flag \verb|-DPLB_MAC_OS_X|. Then follow the instruction given in subsection~\ref{install_linux}. 
+However, the authors have not tested this and will therefore not be able to provide any support.
+
+\subsection{Compiling the Palabos Executable (Windows)}
+
+If despite all warnings you wish to compile the Palabos executable in Windows, there are several 
+considerations that you have to keep in mind:
+\begin{enumerate}
+\item Please read the Windows installing instructions on the Palabos website.
+\item You may need to install new programs and make sure that Code::Blocks (or whichever IDE you use) can 
+reference them. These are
+\begin{itemize}
+\item an MPI program and
+\item \verb|zlib|.
+\end{itemize}
+\end{enumerate}
+
+\subsection{Installing Palander on Hazel Hen} \label{install_cluster}
+
+Since Palander can send a simulation job to be performed on the Hazel Hen supercomputer in HLRS, it is 
+crucial that the user have an account on Hazel Hen. Palander assumes that this is the case, and that it is 
+being run on a computer that is allowed to access the supercomputer, and can do so without needing to prompt 
+for a password. To be granted access, your IP address first needs to be cleared by the HLRS administration, 
+so that you can get through their firewall; then, you need to set up password-free access yourself on your 
+computer. If you don't know how to do this, you can find instructions on the Internet, \eg here: 
+\verb|http://www.rebol.com/docs/ssh-auto-login.html|.
+
+After completing these two steps, you should be able to log in to Hazel Hen using \verb|ssh| (\eg 
+\verb|ssh username@hazelhen.hww.de|). While logged on, you can set up Palander's supercomputer end with the 
+following steps:
+
+\begin{enumerate}
+
+\item In your home directory, create the working directory for Palander with the command \verb|mkdir palander|. 
+(NOTE: This directory name is hardcoded into the Python add-on script. If you wish to use another name, make 
+sure to change \verb|palander_addon.py| accordingly!)
+\item Copy the files \verb|palander_engine.cpp|, \verb|Makefile|, \verb|palander_remoterun.sh| and 
+\verb|palander_scriptbase| into this directory.
+\item Change both compiler flags (\verb|serialCXX| and \verb|parallelCXX|) in Makefile to \verb|CC|.
+\item Set up the Palabos library and compile the Palabos executable as directed in 
+subsections~\ref{install_lib} and~\ref{install_linux}.
+\end{enumerate}
+
+\newpage
+
+\section{Using Palander}
+
+For more in-depth instructions on how to use Blender itself, the reader is encouraged to search for the 
+Blender official online manual, as well as subject-specific third-party tutorials \eg on YouTube. What 
+follows is a cursory set of instructions concentrating on those features of Blender that are relevant to 
+using Palander.
+
+\subsection{Building a Scene}
+
+To make use of Palander, first you need to build a scene as you normally would when using Blender: first add 
+and customize a number of objects, then apply a fluid simulation modifier to each relevant object, and 
+finally launch Palander through the add-on. New objects are available \eg on the ``Create'' tab on the 
+left-hand side; the fluid simulation modifiers can be found on the ``Physics'' tab.
+
+For a successful simulation, you need one cuboid domain object, inside of which all of the water simulation 
+happens. The sides of this cuboid act as walls for the fluid, but any non-fluid objects can exist partially 
+or completely outside of the domain --- the domain walls won't affect them. For there to be any fluid inside 
+of the domain, you need to put in one or more fluid objects or an inflow object. Then, you can use static or 
+dynamic obstacle objects to influence the motion of the fluid during the simulation, as long as this happens 
+withing the confines of the domain.
+
+\subsection{Explicit Palander Parameters}
+
+\begin{minipage}{0.25\textwidth}
+\includegraphics[width=0.9\textwidth]{sidebar.png}
+\end{minipage}
+\begin{minipage}{0.75\textwidth}
+When activated, the add-on is visible as an extra tab entitled ``Palander'' on the left-hand side of the 
+Blender window. If you click on it, you will see a menu like the one on the left. The available options are 
+the following:
+\begin{description}
+\item[Fluid:] This controls the fluid viscosity using several given presets (Blood, Gasoline, Honey, Oil, and 
+Water).
+\item[Time:] This is the simulation length in seconds. Palabos outputs 25 frames per second, and so the total 
+number of output frames is 25 times this number.
+\item[Size:] This is the real-world size of the simulation box. If set to zero, it will use Blender's own 
+value ({\bf Fluid World $\to$ Real World Size} on the ``Physics'' tab of the domain object of your fluid 
+simulation). The limit of 10 meters can be bypassed by setting a value on the ``Palander'' tab.
+\item[Resolution:] The resolution of the simulation, as divisions along the longest edge of the domain box.
+\item[Frame offset:] The frame at which the fluid simulation will start (positive or negative).
+\item[Lattice velocity:] This is the lattice velocity of the simulation. A higher velocity will result in 
+faster simulations, but at the cost of stability. If your simulation keeps crashing, lower this value, but 
+otherwise leave it untouched --- the default value is optimal for most uses.
+\end{description}
+\end{minipage}
+\begin{description}
+\item[Disable surface tension:] Disable Palabos's surface tension algorithm for extra splashiness.
+\item[Continuous simulation:] When enabled, this will save the simulation at the end of the allotted time, 
+and try to load a previously saved state when starting.
+\item[Extra-smooth surface:] This will run a smoothing algorithm on the final mesh twice and on the preview 
+mesh once, as opposed to just the final mesh once when unchecked. Please note that smoothing will cause a 
+loss of detail.
+\item[Floating Pre-Simulation:] An experimental way to include floating capability from a separate fluid 
+simulation. (NOTE: This will not work if you haven't installed the simulation engine DualSPHysics. If you 
+really want to try this out, then please contact the authors for separate instructions.)
+\item[Retrieve Float Path:] Import the path of the floating object from the above pre-simulation.
+\item[(BOBJ) Preview Surface:] Output the simulated preview surface directly into Blender's cache folder 
+(local run) or into the remote output directory (remote run).
+\item[(BOBJ) Final Surface:] Output the smoothed final surface directly into Blender's cache folder (local 
+run) or into the remote output directory (remote run).
+\item[(STL) Preview Interface:] Output an STL file of the preview surface into your local simulation 
+directory (see below).
+\item[(STL) Final Interface:] Output an STL file of the final surface into your local simulation directory 
+(see below).
+\item[(STL) Moving Obstacle:] Output an STL file of the moving obstacle into your local simulation directory 
+(see below).
+\item[(VTK) Volume Fraction:] Write the volume fraction into a VTK output file.
+\item[(VTK) Velocity:] Write the velocities into a VTK output file.
+\item[(VTK) Vorticity:] Write the vorticities into a VTK output file. All VTK output will be written in the 
+same files by frame, which will not be created at all if none of the VTK flags are checked.
+\item[Path:] Set the path to your local simulation directory here (the one where you compiled the Palabos 
+executable).
+\item[Cores:] The number of cores (threads) to use for simulating locally with Palabos. Please don't set this 
+higher than the number of cores available on your machine. (NOTE: If you don't have MPI installed on your 
+machine and/or you have compiled your Palabos executable with the \verb|MPIparallel| flag set to 
+\verb|false|, then leave this setting alone!)
+\item[Execute Locally:] Click on this to run the simulation locally using Palabos. Simulation output will be 
+visible in the System Console --- please check this to see if there are any problems.
+\item[User:] Insert your Hazel Hen user name here. This is necessary to connect to the right account 
+automatically.
+\item[Nodes:] The number of Hazel Hen nodes to use for the simulation. The simulation will automatically run 
+on 24 cores per node.
+\item[Hr:/Min:] The wall time reserved for the simulation.
+\item[Send to Cluster:] Click on this to run the simulation on the Hazel Hen supercomputer. The simulation 
+progress cannot be monitored locally; you must log in to Hazel Hen and view the progress there, or try to 
+retrieve the results with the button below.
+\item[Retrieve Results:] Click on this to retrieve the simulation results from Hazel Hen.
+\end{description}
+
+\subsection{Implicit Interface Parameters}
+
+In addition to the explicit parameters, Palander also uses some of Blender's own simulation parameters. These 
+of course include all objects from the scene that have been flagged for fluid simulation, such as one domain, 
+any number of obstacles or fluids, one inflow, and one outflow. Furthermore, the following parameters are 
+implicitly passed on to the Palabos simulation:
+\begin{description}
+\item[Fluid cache:] From the directory path in {\bf Fluid} on the ``Physics'' tab of the domain object.
+\item[Real World Size:] From {\bf Fluid World $\to$ Real World Size} on the ``Physics'' tab of the domain 
+object.
+\item[Inflow Velocity:] From {\bf Fluid} on the ``Physics'' tab of the inflow object.
+\end{description}
+
+Also, Palander supports a certain number of different keyframe actions. These are
+\begin{description}
+\item[Animated obstacles:] Objects that are flagged as obstacles for the fluid simulation and that are 
+animated using keyframes will have their motion paths exported to Palabos for the simulation.
+\item[On/off inflows:] Objects that are flagged as inflows for the fluid simulation and that are 
+enabled/disabled using keyframes will be activated/deactivated accordingly in the Palabos simulation.
+\end{description}
+
+\newpage
+
+\section{Tutorial: Dam Break}
+
+This tutorial will show how to build and simulate a simple dam break scenario.
+
+\begin{enumerate}
+\item Open Blender.
+\item You should see the startup scene, which contains a single cube. Click on the ``Object'' tab 
+(\includegraphics[height=\baselineskip,trim=0 4 0 -6]{object_icon.png}). Under {\bf Transform $\to$ Scale}, 
+change the scale along the $y$-axis to 3.
+\item To make viewing inside the domain easier, click on ``Viewport Shading'' 
+(\includegraphics[height=\baselineskip,trim=0 4 0 -6]{shading_icon.png}) and select ``Wireframe''.
+\item Create a new cube from the ``Create'' tab.
+\item Move it to one end of the previous cube and scale it down a bit, \eg in {\bf Transform $\to$ Location} 
+Y $\to$ 2.0 and Z $\to$ -0.2 and in {\bf Transform $\to$ Scale} Z $\to$ 0.8.
+\item Create a third cube, scale it down, and move it downstream, \eg in {\bf Transform $\to$ Location} Y 
+$\to$ -2.0 and Z $\to$ -0.8 and in {\bf Transform $\to$ Scale} X $\to$ 0.4, Y $\to$ 0.2, and Z $\to$ 0.2.
+\item Rename the cubes to make it easier to tell them apart. In the ``Outliner'' tab (top right corner, 
+contains a list of all objects), right-click on each cube and select ``Rename'': \eg ``Cube'' $\to$ 
+``Domain'', ``Cube.001'' $\to$ ``Water'', and ``Cube.002'' $\to$ ``Block''.
+\item Select the domain by either clicking on it in the ``Outliner'' tab or right-clicking on it in the 
+viewport. Click on the ``Physics'' tab (\includegraphics[height=\baselineskip,trim=0 4 0 
+-6]{physics_icon.png}), then click on ``Fluid''. From the ``Type'' dropdown menu, select ``Domain''. From the 
+new options that now appear below, change {\bf Fluid World $\to$ Real World Size} to 3.0.
+\item Select the water, click on ``Fluid'', and select ``Fluid'' from the menu.
+\item Select the block, click on ``Fluid'', and select ``Obstacle'' from the menu. Below, select ``Shell'' 
+from ``Volume Initialization''.
+\item Go back to ``Solid'' in the ``Viewport Shading'' menu. Select the domain again.
+\item Click on ``Bake'' on the ``Physics'' tab. There! Now you have started your first simulation using 
+Blender's native engine. You can view its progress from the bar under the text ``Fluid Simulation'' on the 
+top of the screen.
+\item To view the results, first click on the eye symbol on the ``Water'' row in the ``Outliner'' tab. This 
+will remove the water object from view, but the results are actually contained in the domain object. Now, 
+pressing the play button at the bottom of the screen will show a preview of what the results look like.
+\end{enumerate}
+
+You should realize that the resolution of the simulation is quite low by default (65/45). This means that 
+when you preview the results in the viewport, there are only 45 subdivisions along the long edge of the 
+domain! To view the higher-resolution results (65), select ``Final'' from {\bf Fluid $\to$ Viewport Display} 
+just below the resolution settings. This isn't much better --- to see a clear difference, set the resolutions 
+to 200/100 and bake the simulation again. You can see that the simulation is much slower, but if you have the 
+patience to wait, you can again compare the Preview and Final resolutions afterwards. They should now look 
+more like an actual fluid instead of a moving collection of blocks.
+
+Now you can try to run your simulation using Palabos. In many cases, Palabos can be slower than Blender's 
+native engine, so you might want to start with a resolution of 100 to see how fast the simulation can 
+progress. This time, you need to change the resolution from the ``Palander'' tab on the left-hand side of the 
+viewport. Change any other parameters that you wish (\eg click on ``Disable surface tension'' to try to 
+mimick the Blender results), including the path, which you should set to the directory where you have 
+installed Palander (if you're running Palabos locally), or the user name if you want to run on Hazel Hen. 
+Before clicking on ``Execute Locally'' or ``Send to Cluster'', make sure that your water object is active in 
+the viewport --- you may have deactivated it by clicking on its eye symbol in order to better see the results 
+of the previous simulation. Inactive objects will not be passed on to Palabos!
+
+\newpage
+
+\section{Tips and Best Practice}
+
+When you run Palabos locally, the simulation results are automatically output into the same directory where 
+Blender places its own fluid simulation results. Consequently, you can preview the results as they come in, 
+and you don't need to import anything into Blender for further processing and rendering. However, if you run 
+Palabos on Hazel Hen, you will need to transfer the results into Blender's cache directory before being able 
+to view them. You can do this easily by clicking on the ``Retrieve Results'' button on the ``Palander'' tab. 
+Please note that there is currently no algorithm to check what you have previously downloaded; this button 
+will retrieve all the results, starting from the first frame, each time that it is pressed.
+
+Also note that there is no explicit connection between your Blender setup and the retrieved results; rather, 
+the algorithm retrieves the results from the newest workspace, \ie from the most recently started simulation 
+job. For example, this means that if you are working on two projects, and you run a fluid simulation in each 
+of them, you can only use the ``Retrieve Results'' button to download the results from the simulation that 
+started to process later on the supercomputer. To retrieve any other results, you must log in to Hazel Hen 
+yourself and download the desired files manually. This will not be a problem if you run and process one 
+simulation at a time.
+
+If the simulation doesn't finish in the time allotted, the result files are not transferred from the 
+workspace to your home directory on Hazel Hen. This means that when the workspace expires, your results will 
+be lost! By default, Palander reserves workspaces for 10 days, so you have plenty of time to retrieve your 
+results before that happens. Simulations that have time to finish will be copied to your home directory, into 
+a subdirectory denoted by \verb|run| and the date and time of the start of the simulation. These files are 
+safe even after the corresponding workspace expires, but you cannot use the ``Retrieve Results'' button to 
+download them anymore.
+
+\end{document}

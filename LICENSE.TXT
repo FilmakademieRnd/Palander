@@ -1,0 +1,20 @@
+Palander - the Blender Add-on for Directing Artistic Simulations on a Supercomputer
+https://github.com/FilmakademieRnd/Palander
+
+Copyright (c) 2017 Animationsinstitut, Filmakademie Baden-Wuerttemberg
+http://research.animationsinstitut.de/
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the following licenses as approved by the Free Software Foundation:
+ - the GNU General Public License Version 3
+ - the GNU Affero General Public License
+ - the Beerware License
+To whichever source file(s) each of the above licenses holds is defined in the header of each individual 
+file.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the 
+implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the MIT License for more 
+details.
+
+You should have received a copy of the above-mentioned licenses along with this program; if not, please see
+http://www.gnu.org/licenses/

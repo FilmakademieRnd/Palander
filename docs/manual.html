@@ -1,0 +1,699 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  
+  "http://www.w3.org/TR/html4/loose.dtd">  
+<html > 
+<head><title></title> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+<meta name="generator" content="TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)"> 
+<meta name="originator" content="TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)"> 
+<!-- html --> 
+<meta name="src" content="manual.tex"> 
+<meta name="date" content="2017-04-25 14:56:00"> 
+<link rel="stylesheet" type="text/css" href="manual.css"> 
+</head><body 
+>
+<h3 class="sectionHead"><span class="titlemark">1   </span> <a 
+ id="x1-10001"></a>Introduction</h3>
+<!--l. 22--><p class="noindent" >This is a user&#8217;s manual for Palander, the Blender add-on for running the Palabos simulation
+engine. It provides instructions for how to install and use the program, as well as a simple
+tutorial to get the reader started on how to use it as well as Blender in general. Some
+knowledge of Linux basics like compiling and <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">ssh</span></span></span> is recommended to increase the likelihood of
+a successful installation.
+<!--l. 27--><p class="noindent" >Both Palabos and Blender are open-source tools. In the same spirit, the files of
+this program are also released as open-source under the conditions of the following
+licenses:
+      <dl class="description"><dt class="description">
+<span 
+class="cmbx-12">GNU GPLv3</span> </dt><dd 
+class="description">for file <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_addon.py</span></span></span>;
+      </dd><dt class="description">
+<span 
+class="cmbx-12">GNU AGPLv3</span> </dt><dd 
+class="description">for file <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_engine.cpp</span></span></span>; and
+      </dd><dt class="description">
+<span 
+class="cmbx-12">Beerware License rev. 42</span> </dt><dd 
+class="description">for         files         <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_remoterun.sh</span></span></span>      and
+      <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_scriptbase</span></span></span>.</dd></dl>
+<!--l. 35--><p class="noindent" >Palander is provided &#8220;as is&#8221;, and it will most likely not work perfectly for all possible scene
+setups. Palabos is more of a scientific/engineering tool than a content creation engine. Its
+main mode of usage is to optimize an executable <span 
+class="cmti-12">for each use case separately</span>. This means that
+this program, which is intended as a general tool, must make compromises as to speed,
+stability, etc. in order to work sufficiently well for as many use cases as possible. If you think
+you know what you&#8217;re doing, you&#8217;re invited to try to optimize the executable for your own
+specific setups; however, control of most of the relevant parameters is already offered through
+the add-on.
+<!--l. 43--><p class="noindent" >Palander is Copyright <span 
+class="cmsy-10x-x-120">© </span>2017 Animationsinstitut, Filmakademie Baden-Wuerttemberg. It has
+been realized in the scope of the Media Solution Center project, funded by the state of
+Baden-Wuerttemberg, Germany.
+<!--l. 47--><p class="noindent" >
+
+<h3 class="sectionHead"><span class="titlemark">2 </span> <a 
+ id="x1-20002"></a>Installing Palander</h3>
+<!--l. 51--><p class="noindent" >Palander is not a single piece of code, but rather an entity based on the established
+open-source programs Palabos and Blender. This entity consists of the following five
+parts:
+<ol  class="enumerate1" >
+<li 
+  class="enumerate" id="x1-2002x1">a copy of Blender,
+</li>
+<li 
+  class="enumerate" id="x1-2004x2"><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_addon.py</span></span></span>, a Python add-on to be installed on top of Blender,
+</li>
+<li 
+  class="enumerate" id="x1-2006x3"><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_engine.cpp</span></span></span>, a Palabos executable,
+</li>
+<li 
+  class="enumerate" id="x1-2008x4"><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_remoterun.sh</span></span></span>, a remote running script accessed on Hazel Hen by the
+add-on, and
+</li>
+<li 
+  class="enumerate" id="x1-2010x5"><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_scriptbase</span></span></span>, a submission script base for the Hazel Hen batch system.</li></ol>
+<!--l. 60--><p class="noindent" >It is recommended to compile the Palabos executable yourself for your desired platform; a
+Makefile is provided for compilation on Linux computers. Palabos is primarily intended for
+parallel use on clusters, which is why its primary platform is Linux. However, it has also been
+tested and found to work on Windows, albeit not without difficulties in compiling.
+Pre-compiled executables may be available (without guarantee!) for specific platforms &#8212;
+please inquire the authors.
+<!--l. 66--><p class="noindent" >The instructions below are first for desktop usage; subsection&#x00A0;<a 
+href="#x1-90002.7">2.7<!--tex4ht:ref: install_cluster --></a> is necessary only
+if you wish to run your simulations on the Hazel Hen supercomputer. Likewise,
+compiling and installing the Palabos executable on your desktop is not necessary if you
+only wish to run your (Palabos) simulations on the supercomputer. In this case,
+you can make test simulations using Blender&#8217;s native fluid simulation engine, but
+please keep in mind that the results might differ considerably from the Palabos
+simulations.
+<!--l. 72--><p class="noindent" >More in-depth instructions for installing Palabos can be found at the Palabos website under
+<span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">http://www.palabos.org/documentation/userguide/getting-started.html</span></span></span>.
+
+<!--l. 75--><p class="noindent" >
+<h4 class="subsectionHead"><span class="titlemark">2.1 </span> <a 
+ id="x1-30002.1"></a>Installing Blender</h4>
+<!--l. 77--><p class="noindent" >Installing Blender is very straightforward: go to <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">https://www.blender.org/download</span></span></span>,
+choose your platform, and click on a link to download. Install using the instructions provided
+on the website.
+<!--l. 80--><p class="noindent" >
+<h4 class="subsectionHead"><span class="titlemark">2.2 </span> <a 
+ id="x1-40002.2"></a>Installing the Blender Add-On</h4>
+<!--l. 82--><p class="noindent" >Palander&#8217;s Blender add-on is named <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_addon.py</span></span></span>. To install it, follow these
+steps:
+<ol  class="enumerate1" >
+<li 
+  class="enumerate" id="x1-4002x1">Start Blender.
+</li>
+<li 
+  class="enumerate" id="x1-4004x2">Go to <span 
+class="cmbx-12">File </span><span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">User Preferences </span><span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">Add-ons</span>.
+</li>
+<li 
+  class="enumerate" id="x1-4006x3">Make sure that the level &#8220;Community&#8221; is supported.
+</li>
+<li 
+  class="enumerate" id="x1-4008x4">Click on &#8220;Install from File&#8221; and locate the file in question.
+</li>
+<li 
+  class="enumerate" id="x1-4010x5">In section &#8220;Import-Export&#8221;, locate &#8220;Palander&#8221; and checkmark it.
+</li>
+<li 
+  class="enumerate" id="x1-4012x6">Click on &#8220;Save User Settings&#8221;.</li></ol>
+<!--l. 91--><p class="noindent" >The last two steps are necessary for the add-on to be loaded upon each startup of Blender. To
+verify that installation was successful, make sure that there is a new tab named &#8220;Palander&#8221; at
+the bottom of the tab column on the left-hand side of the Blender window. As with any
+modifications to the add-on, you might need to restart Blender for the changes to take
+effect.
+
+<!--l. 96--><p class="noindent" >If you wish to modify the python add-on yourself after installation, you can simply copy the
+new version into Blender&#8217;s add-on directory. For Linux, this should be something like
+<span 
+class="cmsy-10x-x-120">~</span><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">/.config/blender/2.78/scripts/addons</span></span></span>.
+<!--l. 100--><p class="noindent" >
+<h4 class="subsectionHead"><span class="titlemark">2.3 </span> <a 
+ id="x1-50002.3"></a>Installing the Palabos Library</h4>
+<!--l. 102--><p class="noindent" >If you don&#8217;t have a pre-compiled Palabos executable, you need to compile one yourself. For
+this, you first need to install the Palabos library. Officially, you can download this
+library at <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">https://www.palabos.org/download-ql</span></span></span>. However, the current (as of
+April, 2017) newest official release version, v1.5r1, is incompatible with Palander;
+improvements have since then been made to the library without its being released, and a
+newer version that is actually compatible is available from the authors of Palander,
+and is distributed with this installation. Future official releases of Palabos should
+also be compatible with Palander, and their use is recommended once they become
+available.
+<!--l. 110--><p class="noindent" >Either way, you should obtain a ZIP file of the Palabos library. Simply unzip it and
+make sure that you are satisfied with the location into which the library directory is
+uncompressed.
+<!--l. 113--><p class="noindent" >
+<h4 class="subsectionHead"><span class="titlemark">2.4 </span> <a 
+ id="x1-60002.4"></a>Compiling and Installing the Palabos Executable (Linux)</h4>
+<!--l. 115--><p class="noindent" >Palander comes with the Palabos program file <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_engine.cpp</span></span></span> and its Makefile. Place
+these in a directory that you wish to use to store your simulation output. Then, modify the
+Makefile by changing the following settings as required:
+<ul class="itemize1">
+<li class="itemize"><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palabosRoot</span></span></span>: set this to the root directory where you installed the Palabos library
+</li>
+<li class="itemize"><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">MPIparallel</span></span></span> (default <span 
+class="cmbx-12">true</span>): change this to <span 
+class="cmbx-12">false </span>if you intend to run Palabos on
+
+your local computer without installing MPI
+</li>
+<li class="itemize"><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">libraryPaths</span></span></span>: set this to the <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">externalLibraries</span></span></span> subdirectory of your Palabos
+installation directory
+</li>
+<li class="itemize"><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">serialCXX</span></span></span> (default <span 
+class="cmbx-12">g++</span>): change this to your serial compiler of choice
+</li>
+<li class="itemize"><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">parallelCXX</span></span></span> (default <span 
+class="cmbx-12">mpicxx</span>): change this to your parallel compiler of choice</li></ul>
+<!--l. 127--><p class="noindent" >In addition, you may want to change the number of compiler threads in the <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">SCons</span></span></span> definition
+(parameter -j, default <span 
+class="cmbx-12">4</span>).
+<!--l. 130--><p class="noindent" >After making these modifications, you are ready to compile the Palander engine. In Linux,
+you can do this with the command <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">make</span></span></span> in the directory where you have the files
+<span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_engine.cpp</span></span></span> and <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">Makefile</span></span></span>. It will take a few minutes to compile all of the
+necessary library functions for the first time, but after this, re-compiling after any
+modifications to <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_engine.cpp</span></span></span> will take a much shorter amount of time.
+After compiling, you will have an executable called <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_engine</span></span></span>, which the
+add-on will call from inside Blender when requested to perform a simulation using
+Palabos.
+<!--l. 137--><p class="noindent" >
+<h4 class="subsectionHead"><span class="titlemark">2.5 </span> <a 
+ id="x1-70002.5"></a>Compiling the Palabos Executable (Mac OS X)</h4>
+<!--l. 139--><p class="noindent" >According to the makers of Palabos, compiling a Palabos executable should work the same
+way under Mac OS X as under Linux. You simply need to find a <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">gcc</span></span></span>-compatible compiler
+such as <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">xcode</span></span></span> and use the compiler flag <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">-DPLB_MAC_OS_X</span></span></span>. Then follow the instruction given in
+subsection&#x00A0;<a 
+href="#x1-60002.4">2.4<!--tex4ht:ref: install_linux --></a>. However, the authors have not tested this and will therefore not be able to
+provide any support.
+<!--l. 144--><p class="noindent" >
+
+<h4 class="subsectionHead"><span class="titlemark">2.6 </span> <a 
+ id="x1-80002.6"></a>Compiling the Palabos Executable (Windows)</h4>
+<!--l. 146--><p class="noindent" >If despite all warnings you wish to compile the Palabos executable in Windows, there are
+several considerations that you have to keep in mind:
+<ol  class="enumerate1" >
+<li 
+  class="enumerate" id="x1-8002x1">Please read the Windows installing instructions on the Palabos website.
+</li>
+<li 
+  class="enumerate" id="x1-8004x2">You may need to install new programs and make sure that Code::Blocks (or whichever
+IDE you use) can reference them. These are
+     <ul class="itemize1">
+     <li class="itemize">an MPI program and
+     </li>
+     <li class="itemize"><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">zlib</span></span></span>.</li></ul>
+</li></ol>
+<!--l. 158--><p class="noindent" >
+<h4 class="subsectionHead"><span class="titlemark">2.7 </span> <a 
+ id="x1-90002.7"></a>Installing Palander on Hazel Hen</h4>
+<!--l. 160--><p class="noindent" >Since Palander can send a simulation job to be performed on the Hazel Hen supercomputer in
+HLRS, it is crucial that the user have an account on Hazel Hen. Palander assumes that this is
+the case, and that it is being run on a computer that is allowed to access the supercomputer,
+and can do so without needing to prompt for a password. To be granted access, your IP
+address first needs to be cleared by the HLRS administration, so that you can get through
+their firewall; then, you need to set up password-free access yourself on your computer. If you
+don&#8217;t know how to do this, you can find instructions on the Internet, <span 
+class="cmti-12">e.g.</span><span 
+class="cmti-12">&#x00A0;</span>here:
+<span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">http://www.rebol.com/docs/ssh-auto-login.html</span></span></span>.
+<!--l. 168--><p class="noindent" >After completing these two steps, you should be able to log in to Hazel Hen using <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">ssh</span></span></span>
+(<span 
+class="cmti-12">e.g.</span><span 
+class="cmti-12">&#x00A0;</span><span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">ssh</span><span 
+class="cmtt-12">&#x00A0;username@hazelhen.hww.de</span></span></span>). While logged on, you can set up Palander&#8217;s
+supercomputer end with the following steps:
+<!--l. 172--><p class="noindent" >
+
+<ol  class="enumerate1" >
+<li 
+  class="enumerate" id="x1-9002x1">In  your  home  directory,  create  the  working  directory  for  Palander  with  the
+command <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">mkdir</span><span 
+class="cmtt-12">&#x00A0;palander</span></span></span>. (NOTE: This directory name is hardcoded into the
+Python add-on script. If you wish to use another name, make sure to change
+<span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_addon.py</span></span></span> accordingly!)
+</li>
+<li 
+  class="enumerate" id="x1-9004x2">Copy the files <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_engine.cpp</span></span></span>, <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">Makefile</span></span></span>, <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_remoterun.sh</span></span></span> and
+<span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">palander_scriptbase</span></span></span> into this directory.
+</li>
+<li 
+  class="enumerate" id="x1-9006x3">Change both compiler flags (<span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">serialCXX</span></span></span> and <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">parallelCXX</span></span></span>) in Makefile to <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">CC</span></span></span>.
+</li>
+<li 
+  class="enumerate" id="x1-9008x4">Set up the Palabos library and compile the Palabos executable as directed in
+subsections&#x00A0;<a 
+href="#x1-50002.3">2.3<!--tex4ht:ref: install_lib --></a> and&#x00A0;<a 
+href="#x1-60002.4">2.4<!--tex4ht:ref: install_linux --></a>.</li></ol>
+<!--l. 184--><p class="noindent" >
+
+<h3 class="sectionHead"><span class="titlemark">3 </span> <a 
+ id="x1-100003"></a>Using Palander</h3>
+<!--l. 188--><p class="noindent" >For more in-depth instructions on how to use Blender itself, the reader is encouraged to search
+for the Blender official online manual, as well as subject-specific third-party tutorials <span 
+class="cmti-12">e.g.</span><span 
+class="cmti-12">&#x00A0;</span>on
+YouTube. What follows is a cursory set of instructions concentrating on those features of
+Blender that are relevant to using Palander.
+<!--l. 193--><p class="noindent" >
+<h4 class="subsectionHead"><span class="titlemark">3.1 </span> <a 
+ id="x1-110003.1"></a>Building a Scene</h4>
+<!--l. 195--><p class="noindent" >To make use of Palander, first you need to build a scene as you normally would when using
+Blender: first add and customize a number of objects, then apply a fluid simulation modifier
+to each relevant object, and finally launch Palander through the add-on. New objects are
+available <span 
+class="cmti-12">e.g.</span><span 
+class="cmti-12">&#x00A0;</span>on the &#8220;Create&#8221; tab on the left-hand side; the fluid simulation modifiers can be
+found on the &#8220;Physics&#8221; tab.
+<!--l. 200--><p class="noindent" >For a successful simulation, you need one cuboid domain object, inside of which all of the
+water simulation happens. The sides of this cuboid act as walls for the fluid, but any non-fluid
+objects can exist partially or completely outside of the domain &#8212; the domain walls won&#8217;t
+affect them. For there to be any fluid inside of the domain, you need to put in one or more
+fluid objects or an inflow object. Then, you can use static or dynamic obstacle objects to
+influence the motion of the fluid during the simulation, as long as this happens withing the
+confines of the domain.
+<!--l. 207--><p class="noindent" >
+<h4 class="subsectionHead"><span class="titlemark">3.2 </span> <a 
+ id="x1-120003.2"></a>Explicit Palander Parameters</h4>
+<div style="float: left; width: 15%;">
+<!--l. 210--><p class="noindent" ><img 
+src="sidebar.png" alt="PIC"  
+>
+
+</div><div style="float: right; width: 85%;">When activated, the add-on is visible as an extra tab entitled
+&#8220;Palander&#8221; on the left-hand side of the Blender window. If you click
+on it, you will see a menu like the one on the left. The available
+options are the following:
+      <dl class="description"><dt class="description">
+<span 
+class="cmbx-12">Fluid:</span> </dt><dd 
+class="description">This controls the fluid viscosity using several given presets
+      (Blood, Gasoline, Honey, Oil, and Water).
+      </dd><dt class="description">
+<span 
+class="cmbx-12">Time:</span> </dt><dd 
+class="description">This is the simulation length in seconds. Palabos outputs
+      25 frames per second, and so the total number of output
+      frames is 25 times this number.
+      </dd><dt class="description">
+<span 
+class="cmbx-12">Size:</span> </dt><dd 
+class="description">This is the real-world size of the simulation box. If set to
+      zero, it will use Blender&#8217;s own value (<span 
+class="cmbx-12">Fluid World </span><span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">Real</span>
+      <span 
+class="cmbx-12">World  Size </span>on  the  &#8220;Physics&#8221;  tab  of  the  domain  object
+      of  your  fluid  simulation).  The  limit  of  10  meters  can  be
+      bypassed by setting a value on the &#8220;Palander&#8221; tab.
+      </dd><dt class="description">
+<span 
+class="cmbx-12">Resolution:</span> </dt><dd 
+class="description">The resolution of the simulation, as divisions along
+      the longest edge of the domain box.
+      </dd><dt class="description">
+<span 
+class="cmbx-12">Frame offset:</span> </dt><dd 
+class="description">The frame at which the fluid simulation will start
+      (positive or negative).
+      </dd><dt class="description">
+<span 
+class="cmbx-12">Lattice velocity:</span> </dt><dd 
+class="description">This is the lattice velocity of the simulation.
+      A higher velocity will result in faster simulations, but at the
+      cost of stability. If your simulation keeps crashing, lower this
+      value, but otherwise leave it untouched &#8212; the default value
+      is optimal for most uses.</dd></dl></div>
+<dl class="description"><dt class="description">
+<span 
+class="cmbx-12">Disable surface tension:</span> </dt><dd 
+class="description">Disable  Palabos&#8217;s  surface  tension  algorithm  for  extra
+splashiness.
+</dd><dt class="description">
+<span 
+class="cmbx-12">Continuous simulation:</span> </dt><dd 
+class="description">When enabled, this will save the simulation at the end of
+the allotted time, and try to load a previously saved state when starting.
+
+</dd><dt class="description">
+<span 
+class="cmbx-12">Extra-smooth surface:</span> </dt><dd 
+class="description">This will run a smoothing algorithm on the final mesh twice
+and on the preview mesh once, as opposed to just the final mesh once when
+unchecked. Please note that smoothing will cause a loss of detail.
+</dd><dt class="description">
+<span 
+class="cmbx-12">Floating Pre-Simulation:</span> </dt><dd 
+class="description">An experimental way to include floating capability from a
+separate fluid simulation. (NOTE: This will not work if you haven&#8217;t installed the
+simulation engine DualSPHysics. If you really want to try this out, then please
+contact the authors for separate instructions.)
+</dd><dt class="description">
+<span 
+class="cmbx-12">Retrieve Float Path:</span> </dt><dd 
+class="description">Import  the  path  of  the  floating  object  from  the  above
+pre-simulation.
+</dd><dt class="description">
+<span 
+class="cmbx-12">(BOBJ) Preview Surface:</span> </dt><dd 
+class="description">Output  the  simulated  preview  surface  directly  into
+Blender&#8217;s cache folder (local run) or into the remote output directory (remote run).
+</dd><dt class="description">
+<span 
+class="cmbx-12">(BOBJ) Final Surface:</span> </dt><dd 
+class="description">Output the smoothed final surface directly into Blender&#8217;s
+cache folder (local run) or into the remote output directory (remote run).
+</dd><dt class="description">
+<span 
+class="cmbx-12">(STL) Preview Interface:</span> </dt><dd 
+class="description">Output an STL file of the preview surface into your local
+simulation directory (see below).
+</dd><dt class="description">
+<span 
+class="cmbx-12">(STL) Final Interface:</span> </dt><dd 
+class="description">Output  an  STL  file  of  the  final  surface  into  your  local
+simulation directory (see below).
+</dd><dt class="description">
+<span 
+class="cmbx-12">(STL) Moving Obstacle:</span> </dt><dd 
+class="description">Output an STL file of the moving obstacle into your local
+simulation directory (see below).
+</dd><dt class="description">
+<span 
+class="cmbx-12">(VTK) Volume Fraction:</span> </dt><dd 
+class="description">Write the volume fraction into a VTK output file.
+</dd><dt class="description">
+<span 
+class="cmbx-12">(VTK) Velocity:</span> </dt><dd 
+class="description">Write the velocities into a VTK output file.
+</dd><dt class="description">
+<span 
+class="cmbx-12">(VTK) Vorticity:</span> </dt><dd 
+class="description">Write the vorticities into a VTK output file. All VTK output will
+be written in the same files by frame, which will not be created at all if none of
+the VTK flags are checked.
+
+</dd><dt class="description">
+<span 
+class="cmbx-12">Path:</span> </dt><dd 
+class="description">Set the path to your local simulation directory here (the one where you compiled
+the Palabos executable).
+</dd><dt class="description">
+<span 
+class="cmbx-12">Cores:</span> </dt><dd 
+class="description">The number of cores (threads) to use for simulating locally with Palabos. Please
+don&#8217;t set this higher than the number of cores available on your machine. (NOTE:
+If you don&#8217;t have MPI installed on your machine and/or you have compiled your
+Palabos executable with the <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">MPIparallel</span></span></span> flag set to <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">false</span></span></span>, then leave this setting
+alone!)
+</dd><dt class="description">
+<span 
+class="cmbx-12">Execute Locally:</span> </dt><dd 
+class="description">Click on this to run the simulation locally using Palabos. Simulation
+output will be visible in the System Console &#8212; please check this to see if there
+are any problems.
+</dd><dt class="description">
+<span 
+class="cmbx-12">User:</span> </dt><dd 
+class="description">Insert your Hazel Hen user name here. This is necessary to connect to the right
+account automatically.
+</dd><dt class="description">
+<span 
+class="cmbx-12">Nodes:</span> </dt><dd 
+class="description">The number of Hazel Hen nodes to use for the simulation. The simulation will
+automatically run on 24 cores per node.
+</dd><dt class="description">
+<span 
+class="cmbx-12">Hr:/Min:</span> </dt><dd 
+class="description">The wall time reserved for the simulation.
+</dd><dt class="description">
+<span 
+class="cmbx-12">Send to Cluster:</span> </dt><dd 
+class="description">Click on this to run the simulation on the Hazel Hen supercomputer.
+The simulation progress cannot be monitored locally; you must log in to Hazel
+Hen and view the progress there, or try to retrieve the results with the button
+below.
+</dd><dt class="description">
+<span 
+class="cmbx-12">Retrieve Results:</span> </dt><dd 
+class="description">Click on this to retrieve the simulation results from Hazel Hen.</dd></dl>
+<!--l. 275--><p class="noindent" >
+<h4 class="subsectionHead"><span class="titlemark">3.3 </span> <a 
+ id="x1-130003.3"></a>Implicit Interface Parameters</h4>
+
+<!--l. 277--><p class="noindent" >In addition to the explicit parameters, Palander also uses some of Blender&#8217;s own simulation
+parameters. These of course include all objects from the scene that have been flagged for fluid
+simulation, such as one domain, any number of obstacles or fluids, one inflow, and one
+outflow. Furthermore, the following parameters are implicitly passed on to the Palabos
+simulation:
+<dl class="description"><dt class="description">
+<span 
+class="cmbx-12">Fluid cache:</span> </dt><dd 
+class="description">From the directory path in <span 
+class="cmbx-12">Fluid </span>on the &#8220;Physics&#8221; tab of the domain
+object.
+</dd><dt class="description">
+<span 
+class="cmbx-12">Real World Size:</span> </dt><dd 
+class="description">From <span 
+class="cmbx-12">Fluid World </span><span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">Real World Size </span>on the &#8220;Physics&#8221; tab of
+the domain object.
+</dd><dt class="description">
+<span 
+class="cmbx-12">Inflow Velocity:</span> </dt><dd 
+class="description">From <span 
+class="cmbx-12">Fluid </span>on the &#8220;Physics&#8221; tab of the inflow object.</dd></dl>
+<!--l. 288--><p class="noindent" >Also, Palander supports a certain number of different keyframe actions. These are
+<dl class="description"><dt class="description">
+<span 
+class="cmbx-12">Animated obstacles:</span> </dt><dd 
+class="description">Objects that are flagged as obstacles for the fluid simulation
+and that are animated using keyframes will have their motion paths exported to
+Palabos for the simulation.
+</dd><dt class="description">
+<span 
+class="cmbx-12">On/off inflows:</span> </dt><dd 
+class="description">Objects that are flagged as inflows for the fluid simulation and that
+are enabled/disabled using keyframes will be activated/deactivated accordingly in
+the Palabos simulation.</dd></dl>
+<!--l. 296--><p class="noindent" >
+
+<h3 class="sectionHead"><span class="titlemark">4 </span> <a 
+ id="x1-140004"></a>Tutorial: Dam Break</h3>
+<!--l. 300--><p class="noindent" >This tutorial will show how to build and simulate a simple dam break scenario.
+<!--l. 302--><p class="noindent" >
+<ol  class="enumerate1" >
+<li 
+  class="enumerate" id="x1-14002x1">Open Blender.
+</li>
+<li 
+  class="enumerate" id="x1-14004x2">You  should  see  the  startup  scene,  which  contains  a  single  cube.  Click  on  the
+&#8220;Object&#8221; tab (<img 
+src="object_icon.png" alt="PIC"  
+>). Under <span 
+class="cmbx-12">Transform </span><span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">Scale</span>, change the scale along the
+<span 
+class="cmmi-12">y</span>-axis to 3.
+</li>
+<li 
+  class="enumerate" id="x1-14006x3">To make viewing inside the domain easier, click on &#8220;Viewport Shading&#8221; (<img 
+src="shading_icon.png" alt="PIC"  
+>) and
+select &#8220;Wireframe&#8221;.
+</li>
+<li 
+  class="enumerate" id="x1-14008x4">Create a new cube from the &#8220;Create&#8221; tab.
+</li>
+<li 
+  class="enumerate" id="x1-14010x5">Move it to one end of the previous cube and scale it down a bit, <span 
+class="cmti-12">e.g.</span><span 
+class="cmti-12">&#x00A0;</span>in <span 
+class="cmbx-12">Transform</span>
+<span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">Location </span>Y <span 
+class="cmsy-10x-x-120">&#x2192; </span>2.0 and Z <span 
+class="cmsy-10x-x-120">&#x2192; </span>-0.2 and in <span 
+class="cmbx-12">Transform </span><span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">Scale </span>Z <span 
+class="cmsy-10x-x-120">&#x2192; </span>0.8.
+</li>
+<li 
+  class="enumerate" id="x1-14012x6">Create a third cube, scale it down, and move it downstream, <span 
+class="cmti-12">e.g.</span><span 
+class="cmti-12">&#x00A0;</span>in <span 
+class="cmbx-12">Transform</span>
+<span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">Location </span>Y <span 
+class="cmsy-10x-x-120">&#x2192; </span>-2.0 and Z <span 
+class="cmsy-10x-x-120">&#x2192; </span>-0.8 and in <span 
+class="cmbx-12">Transform </span><span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">Scale </span>X <span 
+class="cmsy-10x-x-120">&#x2192; </span>0.4, Y <span 
+class="cmsy-10x-x-120">&#x2192;</span>
+0.2, and Z <span 
+class="cmsy-10x-x-120">&#x2192; </span>0.2.
+</li>
+<li 
+  class="enumerate" id="x1-14014x7">Rename the cubes to make it easier to tell them apart. In the &#8220;Outliner&#8221; tab
+(top right corner, contains a list of all objects), right-click on each cube and select
+&#8220;Rename&#8221;: <span 
+class="cmti-12">e.g.</span><span 
+class="cmti-12">&#x00A0;</span>&#8220;Cube&#8221; <span 
+class="cmsy-10x-x-120">&#x2192; </span>&#8220;Domain&#8221;, &#8220;Cube.001&#8221; <span 
+class="cmsy-10x-x-120">&#x2192; </span>&#8220;Water&#8221;, and &#8220;Cube.002&#8221;
+<span 
+class="cmsy-10x-x-120">&#x2192; </span>&#8220;Block&#8221;.
+</li>
+<li 
+  class="enumerate" id="x1-14016x8">Select the domain by either clicking on it in the &#8220;Outliner&#8221; tab or right-clicking
+on it in the viewport. Click on the &#8220;Physics&#8221; tab (<img 
+src="physics_icon.png" alt="PIC"  
+>), then click on &#8220;Fluid&#8221;.
+From the &#8220;Type&#8221; dropdown menu, select &#8220;Domain&#8221;. From the new options that
+now appear below, change <span 
+class="cmbx-12">Fluid World </span><span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">Real World Size </span>to 3.0.
+
+</li>
+<li 
+  class="enumerate" id="x1-14018x9">Select the water, click on &#8220;Fluid&#8221;, and select &#8220;Fluid&#8221; from the menu.
+</li>
+<li 
+  class="enumerate" id="x1-14020x10">Select the block, click on &#8220;Fluid&#8221;, and select &#8220;Obstacle&#8221; from the menu. Below,
+select &#8220;Shell&#8221; from &#8220;Volume Initialization&#8221;.
+</li>
+<li 
+  class="enumerate" id="x1-14022x11">Go back to &#8220;Solid&#8221; in the &#8220;Viewport Shading&#8221; menu. Select the domain again.
+</li>
+<li 
+  class="enumerate" id="x1-14024x12">Click on &#8220;Bake&#8221; on the &#8220;Physics&#8221; tab. There! Now you have started your first
+simulation using Blender&#8217;s native engine. You can view its progress from the bar
+under the text &#8220;Fluid Simulation&#8221; on the top of the screen.
+</li>
+<li 
+  class="enumerate" id="x1-14026x13">To view the results, first click on the eye symbol on the &#8220;Water&#8221; row in the
+&#8220;Outliner&#8221; tab. This will remove the water object from view, but the results are
+actually contained in the domain object. Now, pressing the play button at the
+bottom of the screen will show a preview of what the results look like.</li></ol>
+<!--l. 333--><p class="noindent" >You should realize that the resolution of the simulation is quite low by default (65/45). This
+means that when you preview the results in the viewport, there are only 45 subdivisions along
+the long edge of the domain! To view the higher-resolution results (65), select &#8220;Final&#8221;
+from <span 
+class="cmbx-12">Fluid </span><span 
+class="cmsy-10x-x-120">&#x2192; </span><span 
+class="cmbx-12">Viewport Display </span>just below the resolution settings. This isn&#8217;t
+much better &#8212; to see a clear difference, set the resolutions to 200/100 and bake the
+simulation again. You can see that the simulation is much slower, but if you have the
+patience to wait, you can again compare the Preview and Final resolutions afterwards.
+They should now look more like an actual fluid instead of a moving collection of
+blocks.
+<!--l. 341--><p class="noindent" >Now you can try to run your simulation using Palabos. In many cases, Palabos can be slower
+than Blender&#8217;s native engine, so you might want to start with a resolution of 100
+to see how fast the simulation can progress. This time, you need to change the
+resolution from the &#8220;Palander&#8221; tab on the left-hand side of the viewport. Change any
+other parameters that you wish (<span 
+class="cmti-12">e.g.</span><span 
+class="cmti-12">&#x00A0;</span>click on &#8220;Disable surface tension&#8221; to try to
+mimick the Blender results), including the path, which you should set to the directory
+where you have installed Palander (if you&#8217;re running Palabos locally), or the user
+name if you want to run on Hazel Hen. Before clicking on &#8220;Execute Locally&#8221; or
+&#8220;Send to Cluster&#8221;, make sure that your water object is active in the viewport &#8212;
+you may have deactivated it by clicking on its eye symbol in order to better see
+the results of the previous simulation. Inactive objects will not be passed on to
+Palabos!
+
+<!--l. 351--><p class="noindent" >
+
+<h3 class="sectionHead"><span class="titlemark">5 </span> <a 
+ id="x1-150005"></a>Tips and Best Practice</h3>
+<!--l. 355--><p class="noindent" >When you run Palabos locally, the simulation results are automatically output into the same
+directory where Blender places its own fluid simulation results. Consequently, you can preview
+the results as they come in, and you don&#8217;t need to import anything into Blender for further
+processing and rendering. However, if you run Palabos on Hazel Hen, you will need to transfer
+the results into Blender&#8217;s cache directory before being able to view them. You can do this
+easily by clicking on the &#8220;Retrieve Results&#8221; button on the &#8220;Palander&#8221; tab. Please note that
+there is currently no algorithm to check what you have previously downloaded; this
+button will retrieve all the results, starting from the first frame, each time that it is
+pressed.
+<!--l. 363--><p class="noindent" >Also note that there is no explicit connection between your Blender setup and the retrieved
+results; rather, the algorithm retrieves the results from the newest workspace, <span 
+class="cmti-12">i.e.</span><span 
+class="cmti-12">&#x00A0;</span>from the
+most recently started simulation job. For example, this means that if you are working on two
+projects, and you run a fluid simulation in each of them, you can only use the &#8220;Retrieve
+Results&#8221; button to download the results from the simulation that started to process later on
+the supercomputer. To retrieve any other results, you must log in to Hazel Hen yourself and
+download the desired files manually. This will not be a problem if you run and process one
+simulation at a time.
+<!--l. 371--><p class="noindent" >If the simulation doesn&#8217;t finish in the time allotted, the result files are not transferred from
+the workspace to your home directory on Hazel Hen. This means that when the workspace
+expires, your results will be lost! By default, Palander reserves workspaces for 10 days, so you
+have plenty of time to retrieve your results before that happens. Simulations that have time to
+finish will be copied to your home directory, into a subdirectory denoted by <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-12">run</span></span></span> and the date
+and time of the start of the simulation. These files are safe even after the corresponding
+workspace expires, but you cannot use the &#8220;Retrieve Results&#8221; button to download them
+anymore.
+ 
+</body></html> 
+
+
+

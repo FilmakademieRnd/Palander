@@ -1,0 +1,7 @@
+pdftex manual
+htlatex manual
+cat manual.html | \
+sed 's/class="minipage">W/style="float: right; width: 85%;">W/' | \
+sed 's/class="minipage"/style="float: left; width: 15%;"/' > temp.html
+mv temp.html manual.html
+rm manual.4?? manual.aux manual.css manual.dvi manual.idv manual.lg manual.log manual.tmp manual.xref
