@@ -63,10 +63,13 @@ def mainCluster(context):
         params.write("    <disableST> " + str(bpy.context.scene.disableST).lower() + " </disableST>\n")
         params.write("    <continuous> " + str(bpy.context.scene.continuous).lower() + " </continuous>\n")
         params.write("    <extraSmooth> " + str(bpy.context.scene.smooooth).lower() + " </extraSmooth>\n")
+        params.write("    <useMask> " + str(bpy.context.scene.useMask).lower() + " </useMask>\n")
         params.write("    <nodes> " + str(int(round(bpy.context.scene.nodes))) + " </nodes>\n")
         params.write("    <runhrs> " + str(int(round(bpy.context.scene.runhrs))) + " </runhrs>\n")
         params.write("    <runmins> " + str(int(round(bpy.context.scene.runmins))) + " </runmins>\n")
         params.write("</Numerics>\n\n<Output>\n")
+        if bpy.context.scene.useMask:
+            params.write("    <maskFile> " + bpy.path.basename(bpy.data.filepath)[:-5] + str(int(round(bpy.context.scene.resolution))).zfill(4) + ".mask </maskFile>\n")
         params.write("    <basePath> " + bpy.path.abspath("//") + " </basePath>\n")
         params.write("    <toCluster> true </toCluster>\n")
         params.write("    <BOBJpre> " + str(bpy.context.scene.BOBJpre).lower() + " </BOBJpre>\n")
@@ -167,7 +170,10 @@ def mainLocal(context):
         params.write("    <disableST> " + str(bpy.context.scene.disableST).lower() + " </disableST>\n")
         params.write("    <continuous> " + str(bpy.context.scene.continuous).lower() + " </continuous>\n")
         params.write("    <extraSmooth> " + str(bpy.context.scene.smooooth).lower() + " </extraSmooth>\n")
+        params.write("    <useMask> " + str(bpy.context.scene.useMask).lower() + " </useMask>\n")
         params.write("</Numerics>\n\n<Output>\n")
+        if bpy.context.scene.useMask:
+            params.write("    <maskFile> " + bpy.path.basename(bpy.data.filepath)[:-5] + str(int(round(bpy.context.scene.resolution))).zfill(4) + ".mask </maskFile>\n")
         params.write("    <basePath> " + bpy.path.abspath("//") + " </basePath>\n")
         params.write("    <toCluster> false </toCluster>\n")
         params.write("    <BOBJpre> " + str(bpy.context.scene.BOBJpre).lower() + " </BOBJpre>\n")
@@ -485,6 +491,12 @@ def initProps():
         description = "Produce extra-smooth surface at the cost of detail"
         )
 
+    bpy.types.Scene.useMask = bpy.props.BoolProperty(
+        name = "Use Mask",
+        default = False,
+        description = "Load/save boolean mask"
+        )
+
     bpy.types.Scene.SPHpath = bpy.props.StringProperty(
         name = "Path",
         subtype = "DIR_PATH",
@@ -600,6 +612,7 @@ def removeProps():
     del bpy.types.Scene.disableST
     del bpy.types.Scene.continuous
     del bpy.types.Scene.smooooth
+    del bpy.types.Scene.useMask
     del bpy.types.Scene.SPHpath
     del bpy.types.Scene.BOBJpre
     del bpy.types.Scene.BOBJfin
@@ -685,6 +698,8 @@ class HLRSAccess(bpy.types.Panel):
         layout = self.layout
         scn = context.scene
         col = layout.column(align=True)
+        row = col.row(align=True)
+        row.prop(scn, "useMask")
         row = col.row(align=True)
         row.label(text="BOBJ Output:")
         row = col.row(align=True)

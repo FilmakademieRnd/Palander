@@ -7,7 +7,7 @@
 <meta name="originator" content="TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)"> 
 <!-- html --> 
 <meta name="src" content="manual.tex"> 
-<meta name="date" content="2017-04-25 14:56:00"> 
+<meta name="date" content="2017-06-30 14:50:00"> 
 <link rel="stylesheet" type="text/css" href="manual.css"> 
 </head><body 
 >
@@ -370,7 +370,7 @@ class="description">This is the lattice velocity of the simulation.
       A higher velocity will result in faster simulations, but at the
       cost of stability. If your simulation keeps crashing, lower this
       value, but otherwise leave it untouched &#8212; the default value
-      is optimal for most uses.</dd></dl></div>
+      is optimal for most uses.</dd></dl>
 <dl class="description"><dt class="description">
 <span 
 class="cmbx-12">Disable surface tension:</span> </dt><dd 
@@ -398,8 +398,14 @@ contact the authors for separate instructions.)
 </dd><dt class="description">
 <span 
 class="cmbx-12">Retrieve Float Path:</span> </dt><dd 
-class="description">Import  the  path  of  the  floating  object  from  the  above
-pre-simulation.
+class="description">Import the path of the floating object from the pre-simulation.
+</dd><dt class="description">
+<span 
+class="cmbx-12">Use Mask:</span> </dt><dd 
+class="description">Use an integer mask to set up the simulation. If the mask file doesn&#8217;t exist,
+it will be created and saved for use in further simulations. This can drastically
+speed up the initiation of simulations containing non-moving obstacles with high
+vertex counts.
 </dd><dt class="description">
 <span 
 class="cmbx-12">(BOBJ) Preview Surface:</span> </dt><dd 
@@ -424,7 +430,7 @@ simulation directory (see below).
 <span 
 class="cmbx-12">(STL) Moving Obstacle:</span> </dt><dd 
 class="description">Output an STL file of the moving obstacle into your local
-simulation directory (see below).
+simulation directory (see below).</div>
 </dd><dt class="description">
 <span 
 class="cmbx-12">(VTK) Volume Fraction:</span> </dt><dd 
@@ -433,13 +439,13 @@ class="description">Write the volume fraction into a VTK output file.
 <span 
 class="cmbx-12">(VTK) Velocity:</span> </dt><dd 
 class="description">Write the velocities into a VTK output file.
+
 </dd><dt class="description">
 <span 
 class="cmbx-12">(VTK) Vorticity:</span> </dt><dd 
 class="description">Write the vorticities into a VTK output file. All VTK output will
 be written in the same files by frame, which will not be created at all if none of
 the VTK flags are checked.
-
 </dd><dt class="description">
 <span 
 class="cmbx-12">Path:</span> </dt><dd 
@@ -486,11 +492,11 @@ below.
 <span 
 class="cmbx-12">Retrieve Results:</span> </dt><dd 
 class="description">Click on this to retrieve the simulation results from Hazel Hen.</dd></dl>
-<!--l. 275--><p class="noindent" >
+
+<!--l. 278--><p class="noindent" >
 <h4 class="subsectionHead"><span class="titlemark">3.3 </span> <a 
  id="x1-130003.3"></a>Implicit Interface Parameters</h4>
-
-<!--l. 277--><p class="noindent" >In addition to the explicit parameters, Palander also uses some of Blender&#8217;s own simulation
+<!--l. 280--><p class="noindent" >In addition to the explicit parameters, Palander also uses some of Blender&#8217;s own simulation
 parameters. These of course include all objects from the scene that have been flagged for fluid
 simulation, such as one domain, any number of obstacles or fluids, one inflow, and one
 outflow. Furthermore, the following parameters are implicitly passed on to the Palabos
@@ -514,7 +520,7 @@ the domain object.
 class="cmbx-12">Inflow Velocity:</span> </dt><dd 
 class="description">From <span 
 class="cmbx-12">Fluid </span>on the &#8220;Physics&#8221; tab of the inflow object.</dd></dl>
-<!--l. 288--><p class="noindent" >Also, Palander supports a certain number of different keyframe actions. These are
+<!--l. 291--><p class="noindent" >Also, Palander supports a certain number of different keyframe actions. These are
 <dl class="description"><dt class="description">
 <span 
 class="cmbx-12">Animated obstacles:</span> </dt><dd 
@@ -527,12 +533,12 @@ class="cmbx-12">On/off inflows:</span> </dt><dd
 class="description">Objects that are flagged as inflows for the fluid simulation and that
 are enabled/disabled using keyframes will be activated/deactivated accordingly in
 the Palabos simulation.</dd></dl>
-<!--l. 296--><p class="noindent" >
+<!--l. 299--><p class="noindent" >
 
 <h3 class="sectionHead"><span class="titlemark">4 </span> <a 
  id="x1-140004"></a>Tutorial: Dam Break</h3>
-<!--l. 300--><p class="noindent" >This tutorial will show how to build and simulate a simple dam break scenario.
-<!--l. 302--><p class="noindent" >
+<!--l. 303--><p class="noindent" >This tutorial will show how to build and simulate a simple dam break scenario.
+<!--l. 305--><p class="noindent" >
 <ol  class="enumerate1" >
 <li 
   class="enumerate" id="x1-14002x1">Open Blender.
@@ -633,7 +639,7 @@ under the text &#8220;Fluid Simulation&#8221; on the top of the screen.
 &#8220;Outliner&#8221; tab. This will remove the water object from view, but the results are
 actually contained in the domain object. Now, pressing the play button at the
 bottom of the screen will show a preview of what the results look like.</li></ol>
-<!--l. 333--><p class="noindent" >You should realize that the resolution of the simulation is quite low by default (65/45). This
+<!--l. 336--><p class="noindent" >You should realize that the resolution of the simulation is quite low by default (65/45). This
 means that when you preview the results in the viewport, there are only 45 subdivisions along
 the long edge of the domain! To view the higher-resolution results (65), select &#8220;Final&#8221;
 from <span 
@@ -645,7 +651,7 @@ simulation again. You can see that the simulation is much slower, but if you hav
 patience to wait, you can again compare the Preview and Final resolutions afterwards.
 They should now look more like an actual fluid instead of a moving collection of
 blocks.
-<!--l. 341--><p class="noindent" >Now you can try to run your simulation using Palabos. In many cases, Palabos can be slower
+<!--l. 344--><p class="noindent" >Now you can try to run your simulation using Palabos. In many cases, Palabos can be slower
 than Blender&#8217;s native engine, so you might want to start with a resolution of 100
 to see how fast the simulation can progress. This time, you need to change the
 resolution from the &#8220;Palander&#8221; tab on the left-hand side of the viewport. Change any
@@ -660,11 +666,11 @@ you may have deactivated it by clicking on its eye symbol in order to better see
 the results of the previous simulation. Inactive objects will not be passed on to
 Palabos!
 
-<!--l. 351--><p class="noindent" >
+<!--l. 354--><p class="noindent" >
 
 <h3 class="sectionHead"><span class="titlemark">5 </span> <a 
  id="x1-150005"></a>Tips and Best Practice</h3>
-<!--l. 355--><p class="noindent" >When you run Palabos locally, the simulation results are automatically output into the same
+<!--l. 358--><p class="noindent" >When you run Palabos locally, the simulation results are automatically output into the same
 directory where Blender places its own fluid simulation results. Consequently, you can preview
 the results as they come in, and you don&#8217;t need to import anything into Blender for further
 processing and rendering. However, if you run Palabos on Hazel Hen, you will need to transfer
@@ -673,7 +679,7 @@ easily by clicking on the &#8220;Retrieve Results&#8221; button on the &#8220;Pa
 there is currently no algorithm to check what you have previously downloaded; this
 button will retrieve all the results, starting from the first frame, each time that it is
 pressed.
-<!--l. 363--><p class="noindent" >Also note that there is no explicit connection between your Blender setup and the retrieved
+<!--l. 366--><p class="noindent" >Also note that there is no explicit connection between your Blender setup and the retrieved
 results; rather, the algorithm retrieves the results from the newest workspace, <span 
 class="cmti-12">i.e.</span><span 
 class="cmti-12">&#x00A0;</span>from the
@@ -683,7 +689,7 @@ Results&#8221; button to download the results from the simulation that started t
 the supercomputer. To retrieve any other results, you must log in to Hazel Hen yourself and
 download the desired files manually. This will not be a problem if you run and process one
 simulation at a time.
-<!--l. 371--><p class="noindent" >If the simulation doesn&#8217;t finish in the time allotted, the result files are not transferred from
+<!--l. 374--><p class="noindent" >If the simulation doesn&#8217;t finish in the time allotted, the result files are not transferred from
 the workspace to your home directory on Hazel Hen. This means that when the workspace
 expires, your results will be lost! By default, Palander reserves workspaces for 10 days, so you
 have plenty of time to retrieve your results before that happens. Simulations that have time to

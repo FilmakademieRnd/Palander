@@ -238,7 +238,10 @@ loss of detail.
 \item[Floating Pre-Simulation:] An experimental way to include floating capability from a separate fluid 
 simulation. (NOTE: This will not work if you haven't installed the simulation engine DualSPHysics. If you 
 really want to try this out, then please contact the authors for separate instructions.)
-\item[Retrieve Float Path:] Import the path of the floating object from the above pre-simulation.
+\item[Retrieve Float Path:] Import the path of the floating object from the pre-simulation.
+\item[Use Mask:] Use an integer mask to set up the simulation. If the mask file doesn't exist, it will be 
+created and saved for use in further simulations. This can drastically speed up the initiation of simulations 
+containing non-moving obstacles with high vertex counts.
 \item[(BOBJ) Preview Surface:] Output the simulated preview surface directly into Blender's cache folder 
 (local run) or into the remote output directory (remote run).
 \item[(BOBJ) Final Surface:] Output the smoothed final surface directly into Blender's cache folder (local 

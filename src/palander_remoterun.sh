@@ -33,9 +33,10 @@ id=$(date +%d%m%y_%H%M%S)
 mkdir run_$id
 cd run_$id
 mkdir tmp
-cp ../palander .
+cp ../palander_engine .
 mv ../object*.stl ../toPalabos.xml .
 
+mask=$(awk '/maskFile/ {print($2)}' toPalabos.xml)
 nod=$(awk '/nodes/ {print($2)}' toPalabos.xml)
 hrs=$(awk '/runhrs/ {print($2)}' toPalabos.xml)
 mins=$(awk '/runmins/ {print($2)}' toPalabos.xml)
@@ -47,6 +48,14 @@ awk '{if(/BASE_NODES/) {str = $0; sub("BASE_NODES",'$nod',str); print(str); cpus
       else if(/BASE_TIME/) {str = $0; sub("BASE_TIME","'$runtime'",str); print(str)}
       else if(/BASE_QUEUE/) {if('$hrs' == 0 && '$mins' <= 25 && '$nod' <= 384) {str = $0; sub("BASE_QUEUE","test",str); print(str)}}
       else {print}}' ../palander_scriptbase > ./script
+
+if [ $mask ]; then
+	if [ -f ../$mask ]; then
+		cp ../$mask .
+	else
+		echo "cp $mask \$PBS_O_WORKDIR/.." >> ./script
+	fi
+fi
 
 echo HLRS: Submitting to batch queue...
 qsub script > /dev/null 2>&1

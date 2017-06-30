@@ -73,10 +73,10 @@ T lx, ly, lz, size, lxHalf, lyHalf, lzHalf;
 T dx, dy, dz, dxmin, dymin, dzmin, dxmax, dymax, dzmax;
 T delta_t, delta_x, rotNorm, velNorm;
 T uLB, nuPhys, nuLB, tau, omega, Bo, surfaceTensionLB, contactAngle;
-bool disableST, continuous, smooooth, toCluster;
+bool disableST, continuous, smooooth, useMask, foundMask, toCluster;
 bool BOBJpre, BOBJfin, STLint, STLsmint, STLmov, VTKvf, VTKvel, VTKvort;
 Array<T,3> externalForce;
-std::string basePath, cache, *objType;
+std::string basePath, cache, maskFile, *objType;
 std::vector<float> location, rotation, sceneScale;
 std::vector<T> xmin, ymin, zmin, xmax, ymax, zmax;
 std::vector<T> *matrix, *vertices;
@@ -87,6 +87,9 @@ std::string outDir = OUTDIR;
 
 std::vector<DEFscaledMesh<T>* > fluidMesh;
 std::vector<DEFscaledMesh<T>* > solidMesh;
+
+MultiScalarField3D<int> *mask;
+int ***outMask;
 
 void setupParameters() {
     delta_x = size / N;
@@ -105,6 +108,8 @@ void setupParameters() {
     surfaceTensionLB = rhoEmpty * gLB * N * N / Bo;
 
     lxHalf = lx/2.0; lyHalf = ly/2.0; lzHalf = lz/2.0;
+
+    if (useMask) mask = new MultiScalarField3D<int>(nx, ny, nz);
 
 }
 
@@ -155,12 +160,16 @@ int initialFluidFlags(plint x, plint y, plint z)
         if (solidIntersections % 2) break;
     }
 
-    if (solidIntersections % 2)
+    if (solidIntersections % 2) {
+        if (useMask) outMask[x][y][z] = freeSurfaceFlag::wall;
         return freeSurfaceFlag::wall;
-    else if (fluidIntersections % 2)
+    } else if (fluidIntersections % 2) {
+        if (useMask) outMask[x][y][z] = freeSurfaceFlag::fluid;
         return freeSurfaceFlag::fluid;
-    else
+    } else {
+        if (useMask) outMask[x][y][z] = freeSurfaceFlag::empty;
         return freeSurfaceFlag::empty;
+    }
 
 }
 
@@ -435,7 +444,9 @@ int main(int argc, char **argv)
     xmlFile["Numerics"]["disableST"].read(disableST);
     xmlFile["Numerics"]["continuous"].read(continuous);
     xmlFile["Numerics"]["extraSmooth"].read(smooooth);
+    xmlFile["Numerics"]["useMask"].read(useMask);
 
+    xmlFile["Output"]["maskFile"].read(maskFile);
     xmlFile["Output"]["basePath"].read(basePath);
     xmlFile["Output"]["toCluster"].read(toCluster);
     xmlFile["Output"]["BOBJpre"].read(BOBJpre);
@@ -455,6 +466,7 @@ int main(int argc, char **argv)
     vertices = new std::vector<T>[objCount];
 
     maxTime *= 1000.0;
+    foundMask = false;
     fluidCount = staticSurfaces = movingSurfaces = 0;
     inVel.resize(0); velocity.resize(0); enabledFrame.resize(0); enabledSwitch.resize(0);
     fluidMesh.resize(0); solidMesh.resize(0);
@@ -584,10 +596,23 @@ int main(int argc, char **argv)
     pcout << "Setting up parameters..." << std::endl;
 #endif
     setupParameters();
-    outIter = (int) round(1.0/(FPS*delta_t));
+    outIter = util::roundToInt(1.0/(FPS*delta_t));
     statIter = outIter / 4; if (statIter == 0) statIter = 1;
     iniIter = iniTime = 0;
-    maxIter = (int) round(maxTime/(1000.0*delta_t));
+    maxIter = util::roundToInt(maxTime/(1000.0*delta_t));
+
+    if (useMask) {
+        if (!toCluster)
+            maskFile = basePath + maskFile;
+        plb_ifstream infile(maskFile.c_str());
+        if (infile.good()) {
+            pcout << "Found mask file!" << std::endl;
+            infile >> *mask;
+            foundMask = true;
+        } else {
+            pcout << "Creating mask file..." << std::endl;
+        }
+    }
 
     for (plint i = 0; i < objCount; i++) {
         for (plint xyz = 0; xyz < 3; xyz++)
@@ -674,8 +699,9 @@ int main(int argc, char **argv)
 #endif
     SparseBlockStructure3D blockStructure(createRegularDistribution3D(nx, ny, nz));
     Dynamics<T,DESCRIPTOR>* dynamics
-        = new SmagorinskyRegularizedDynamics<T,DESCRIPTOR>(omega, cSmago);
-//      = new SmagorinskyBGKdynamics<T,DESCRIPTOR>(omega, cSmago);
+//      = new SmagorinskyRegularizedDynamics<T,DESCRIPTOR>(omega, cSmago);
+        = new SmagorinskyBGKdynamics<T,DESCRIPTOR>(omega, cSmago);
+//      = new IncBGKdynamics<T,DESCRIPTOR>(omega);
     FreeSurfaceFields3D<T,DESCRIPTOR>* fields;
     if (movingSurfaces) {
         fields = new FreeSurfaceFields3D<T,DESCRIPTOR>(blockStructure, dynamics->clone(), rhoEmpty,
@@ -685,16 +711,56 @@ int main(int argc, char **argv)
         fields = new FreeSurfaceFields3D<T,DESCRIPTOR>(blockStructure, dynamics->clone(), rhoEmpty,
                 surfaceTensionLB, contactAngle, externalForce);
     }
-    setToConstant(fields->flag, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::wall);
-    setToFunction(fields->flag, fields->flag.getBoundingBox().enlarge(-1), initialFluidFlags);
+    if (useMask && !foundMask) {
+        outMask = new int**[nx];
+        for (plint xx = 0; xx < nx; xx++) {
+            outMask[xx] = new int*[ny];
+            for (plint yy = 0; yy < ny; yy++) {
+                outMask[xx][yy] = new int[nz];
+                for (plint zz = 0; zz < nz; zz++)
+                    outMask[xx][yy][zz] = freeSurfaceFlag::wall;
+            }
+        }
+    }
+    OnLatticeBoundaryCondition3D<T,DESCRIPTOR>* boundaryCondition = createLocalBoundaryCondition3D<T,DESCRIPTOR>();
+    boundaryCondition->setVelocityConditionOnBlockBoundaries(fields->lattice, fields->lattice.getBoundingBox(),
+        boundary::outflow);
+    if (foundMask) {
+        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::wall, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::wall);
+        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::fluid, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::fluid);
+        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::interface, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::interface);
+        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::empty, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::empty);
+    } else {
+        setToConstant(fields->flag, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::wall);
+        setToFunction(fields->flag, fields->flag.getBoundingBox().enlarge(-1), initialFluidFlags);
+//      setToFunction(fields->flag, fields->flag.getBoundingBox(), initialFluidFlags);
+    }
     if (isInlet) setToConstant(fields->flag, bounds[inletIndex], (int)freeSurfaceFlag::fluid);
+
     fields->lattice.toggleInternalStatistics(false);
     fields->periodicityToggleAll(false);
     fields->defaultInitialize();
 
-    OnLatticeBoundaryCondition3D<T,DESCRIPTOR>* boundaryCondition = createLocalBoundaryCondition3D<T,DESCRIPTOR>();
-    boundaryCondition->setVelocityConditionOnBlockBoundaries(fields->lattice, fields->lattice.getBoundingBox(),
-        boundary::freeslip);
+    if (useMask) {
+        if (!foundMask) {
+            plb_ofstream omf(maskFile.c_str());
+            for (plint xx = 0; xx < nx; xx++)
+                for (plint yy = 0; yy < ny; yy++)
+                    for (plint zz = 0; zz < nz; zz++)
+                        omf << fields->flag.get(xx,yy,zz) << " ";
+            global::mpi().barrier();
+        }
+
+        delete mask;
+        if (!foundMask) {
+            for (plint xx = 0; xx < nx; xx++) {
+                for (plint yy = 0; yy < ny; yy++)
+                    delete outMask[xx][yy];
+                delete outMask[xx];
+            }
+            delete outMask;
+        }
+    }
 
     // Load the previous final state for continuous simulation (or not)
 
@@ -735,8 +801,6 @@ int main(int argc, char **argv)
         }
     }
     if (isOutlet) defineDynamics(fields->lattice, bounds[outletIndex], new BoundaryCompositeDynamics<T,DESCRIPTOR>(dynamics->clone(), false) );
-
-    delete boundaryCondition;
 
     // Main iteration loop
 
@@ -791,10 +855,10 @@ int main(int argc, char **argv)
                 applyProcessingFunctional(new PartiallyDefaultInitializeFreeSurface3D<T,DESCRIPTOR>(dynamics->clone(), externalForce, rhoEmpty),
                     bounds[inletIndex].enlarge(1), fields->freeSurfaceArgs);
                 OnLatticeBoundaryCondition3D<T,DESCRIPTOR>*
-                    boundaryCondition = createLocalBoundaryCondition3D<T,DESCRIPTOR>();
-                boundaryCondition->addVelocityBoundary0N(bounds[inletIndex], fields->lattice);
+                    newBoundaryCondition = createLocalBoundaryCondition3D<T,DESCRIPTOR>();
+                newBoundaryCondition->addVelocityBoundary0N(bounds[inletIndex], fields->lattice);
                 setBoundaryVelocity(fields->lattice, bounds[inletIndex], velocity[inletIndex]);
-                delete boundaryCondition;
+                delete newBoundaryCondition;
             }
             applyProcessingFunctional(new InletConstVolumeFraction3D<T,DESCRIPTOR>(1.002), bounds[inletIndex], fields->freeSurfaceArgs);
         }
@@ -904,6 +968,7 @@ int main(int argc, char **argv)
         symlink(dat.c_str(), VF_SAVE);
     }
 
+    delete boundaryCondition;
     delete dynamics;
     delete fields;
 
