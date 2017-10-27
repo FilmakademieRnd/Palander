@@ -72,6 +72,7 @@ def mainCluster(context):
             params.write("    <maskFile> " + bpy.path.basename(bpy.data.filepath)[:-5] + str(int(round(bpy.context.scene.resolution))).zfill(4) + ".mask </maskFile>\n")
         params.write("    <basePath> " + bpy.path.abspath("//") + " </basePath>\n")
         params.write("    <toCluster> true </toCluster>\n")
+        params.write("    <tangaroa> false </tangaroa>\n")
         params.write("    <BOBJpre> " + str(bpy.context.scene.BOBJpre).lower() + " </BOBJpre>\n")
         params.write("    <BOBJfin> " + str(bpy.context.scene.BOBJfin).lower() + " </BOBJfin>\n")
         params.write("    <STLint> " + str(bpy.context.scene.STLint).lower() + " </STLint>\n")
@@ -79,6 +80,7 @@ def mainCluster(context):
         params.write("    <STLmov> " + str(bpy.context.scene.STLmov).lower() + " </STLmov>\n")
         params.write("    <VTKvf> " + str(bpy.context.scene.VTKvf).lower() + " </VTKvf>\n")
         params.write("    <VTKvel> " + str(bpy.context.scene.VTKvel).lower() + " </VTKvel>\n")
+        params.write("    <VTKspeeds> " + str(bpy.context.scene.VTKspeeds).lower() + " </VTKspeeds>\n")
         params.write("    <VTKvort> " + str(bpy.context.scene.VTKvort).lower() + " </VTKvort>\n")
         params.write("</Output>\n\n<Geometry>\n")
         oct = 0
@@ -99,13 +101,13 @@ def mainCluster(context):
                         params.write("        <scale> " + ' '.join(str(round(obj.scale[i],4)) for i in range(0,3)) + " </scale>\n")
                         params.write("        <cache> " + mod.settings.filepath + " </cache>\n")
                     elif mod.settings.type == 'INFLOW':
-                        params.write("        <inflowVelocity> " + ' '.join(str(round(mod.settings.inflow_velocity[i],4)) for i in range(0,3)) + " </inflowVelocity>\n")
+                        params.write("        <velocity" + str(oct) + "> " + ' '.join(str(round(mod.settings.inflow_velocity[i],4)) for i in range(0,3)) + " </velocity" + str(oct) + ">\n")
                         if obj.animation_data:
                             if obj.animation_data.action.fcurves[0].data_path == 'modifiers["Fluidsim"].settings.use':
-                                params.write("        <enabledFrame> " + ' '.join(str(int(points.co[0])) for points in obj.animation_data.action.fcurves[0].keyframe_points) + " </enabledFrame>\n")
-                                params.write("        <enabledSwitch> " + ' '.join(str(int(points.co[1])) for points in obj.animation_data.action.fcurves[0].keyframe_points) + " </enabledSwitch>\n")
+                                params.write("        <enabledFrame" + str(oct) + "> " + ' '.join(str(int(points.co[0])) for points in obj.animation_data.action.fcurves[0].keyframe_points) + " </enabledFrame" + str(oct) + ">\n")
+                                params.write("        <enabledSwitch" + str(oct) + "> " + ' '.join(str(int(points.co[1])) for points in obj.animation_data.action.fcurves[0].keyframe_points) + " </enabledSwitch" + str(oct) + ">\n")
                     elif mod.settings.type == 'FLUID':
-                        params.write("        <initialVelocity> " + ' '.join(str(round(mod.settings.initial_velocity[i],4)) for i in range(0,3)) + " </initialVelocity>\n")
+                        params.write("        <velocity" + str(oct) + "> " + ' '.join(str(round(mod.settings.initial_velocity[i],4)) for i in range(0,3)) + " </velocity" + str(oct) + ">\n")
                     elif mod.settings.type == 'OBSTACLE':
                         if obj.animation_data:
                             cct = int(obj.animation_data.action.fcurves[0].range()[1])
@@ -152,6 +154,11 @@ def mainClusterGet(context):
     proc = subprocess.Popen(["ssh", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", address, "ws_list", "-Cr", "|", "awk", "'NR", "==", "2", "{print($4)}'", "2>/dev/null"], stdout=subprocess.PIPE)
     (out, err) = proc.communicate()
     os.system("scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null " + address + ":" + out.decode('utf-8').rstrip() + "/tmp/*.bobj.gz . 2>/dev/null")
+    os.chdir(bpy.path.abspath(bpy.context.scene.localpath))
+    if not os.path.exists('tmp'):
+        os.makedirs('tmp')
+    os.system("scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null " + address + ":" + out.decode('utf-8').rstrip() + "/tmp/*.stl ./tmp 2>/dev/null")
+    os.system("scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null " + address + ":" + out.decode('utf-8').rstrip() + "/tmp/*.vti ./tmp 2>/dev/null")
     print('Done!')
 
 def mainLocal(context):
@@ -176,6 +183,7 @@ def mainLocal(context):
             params.write("    <maskFile> " + bpy.path.basename(bpy.data.filepath)[:-5] + str(int(round(bpy.context.scene.resolution))).zfill(4) + ".mask </maskFile>\n")
         params.write("    <basePath> " + bpy.path.abspath("//") + " </basePath>\n")
         params.write("    <toCluster> false </toCluster>\n")
+        params.write("    <tangaroa> false </tangaroa>\n")
         params.write("    <BOBJpre> " + str(bpy.context.scene.BOBJpre).lower() + " </BOBJpre>\n")
         params.write("    <BOBJfin> " + str(bpy.context.scene.BOBJfin).lower() + " </BOBJfin>\n")
         params.write("    <STLint> " + str(bpy.context.scene.STLint).lower() + " </STLint>\n")
@@ -183,6 +191,7 @@ def mainLocal(context):
         params.write("    <STLmov> " + str(bpy.context.scene.STLmov).lower() + " </STLmov>\n")
         params.write("    <VTKvf> " + str(bpy.context.scene.VTKvf).lower() + " </VTKvf>\n")
         params.write("    <VTKvel> " + str(bpy.context.scene.VTKvel).lower() + " </VTKvel>\n")
+        params.write("    <VTKspeeds> " + str(bpy.context.scene.VTKspeeds).lower() + " </VTKspeeds>\n")
         params.write("    <VTKvort> " + str(bpy.context.scene.VTKvort).lower() + " </VTKvort>\n")
         params.write("</Output>\n\n<Geometry>\n")
         oct = 0
@@ -203,13 +212,13 @@ def mainLocal(context):
                         params.write("        <scale> " + ' '.join(str(round(obj.scale[i],4)) for i in range(0,3)) + " </scale>\n")
                         params.write("        <cache> " + mod.settings.filepath + " </cache>\n")
                     elif mod.settings.type == 'INFLOW':
-                        params.write("        <inflowVelocity> " + ' '.join(str(round(mod.settings.inflow_velocity[i],4)) for i in range(0,3)) + " </inflowVelocity>\n")
+                        params.write("        <velocity" + str(oct) + "> " + ' '.join(str(round(mod.settings.inflow_velocity[i],4)) for i in range(0,3)) + " </velocity" + str(oct) + ">\n")
                         if obj.animation_data:
                             if obj.animation_data.action.fcurves[0].data_path == 'modifiers["Fluidsim"].settings.use':
-                                params.write("        <enabledFrame> " + ' '.join(str(int(points.co[0])) for points in obj.animation_data.action.fcurves[0].keyframe_points) + " </enabledFrame>\n")
-                                params.write("        <enabledSwitch> " + ' '.join(str(int(points.co[1])) for points in obj.animation_data.action.fcurves[0].keyframe_points) + " </enabledSwitch>\n")
+                                params.write("        <enabledFrame" + str(oct) + "> " + ' '.join(str(int(points.co[0])) for points in obj.animation_data.action.fcurves[0].keyframe_points) + " </enabledFrame" + str(oct) + ">\n")
+                                params.write("        <enabledSwitch" + str(oct) + "> " + ' '.join(str(int(points.co[1])) for points in obj.animation_data.action.fcurves[0].keyframe_points) + " </enabledSwitch" + str(oct) + ">\n")
                     elif mod.settings.type == 'FLUID':
-                        params.write("        <initialVelocity> " + ' '.join(str(round(mod.settings.initial_velocity[i],4)) for i in range(0,3)) + " </initialVelocity>\n")
+                        params.write("        <velocity" + str(oct) + "> " + ' '.join(str(round(mod.settings.initial_velocity[i],4)) for i in range(0,3)) + " </velocity" + str(oct) + ">\n")
                     elif mod.settings.type == 'OBSTACLE':
                         if obj.animation_data:
                             cct = int(obj.animation_data.action.fcurves[0].range()[1])
@@ -412,6 +421,174 @@ def mainRetrieve(context):
                         fc.update()
         print('Float path imported!')
 
+def mainTangaroa(context):
+    print('Preparing simulation parameters...')
+    os.chdir(bpy.path.abspath(bpy.context.scene.localpath))
+    if not os.path.exists('out'):
+        os.makedirs('out')
+    with open("toPalabos.xml","w") as params:
+        params.write("<?xml ?>\n<!-- Palander configuration file -->\n\n")
+        params.write("<Numerics>\n")
+        params.write("    <viscosity> " + bpy.context.scene.fluid + "e-6 </viscosity>\n")
+        params.write("    <maxTime> " + str(round(bpy.context.scene.simutime,4)) + " </maxTime>\n")
+        params.write("    <resolution> " + str(int(round(bpy.context.scene.resolution))) + " </resolution>\n")
+        params.write("    <saveOffset> " + str(int(round(bpy.context.scene.saveOffset))) + " </saveOffset>\n")
+        params.write("    <latticeVel> " + str(round(bpy.context.scene.latticeVel,4)) + " </latticeVel>\n")
+        params.write("    <disableST> " + str(bpy.context.scene.disableST).lower() + " </disableST>\n")
+        params.write("    <continuous> " + str(bpy.context.scene.continuous).lower() + " </continuous>\n")
+        params.write("    <extraSmooth> " + str(bpy.context.scene.smooooth).lower() + " </extraSmooth>\n")
+        params.write("    <useMask> " + str(bpy.context.scene.useMask).lower() + " </useMask>\n")
+        params.write("</Numerics>\n\n<Output>\n")
+        if bpy.context.scene.useMask:
+            params.write("    <maskFile> " + bpy.path.basename(bpy.data.filepath)[:-5] + str(int(round(bpy.context.scene.resolution))).zfill(4) + ".mask </maskFile>\n")
+        params.write("    <basePath> " + bpy.path.abspath("//") + " </basePath>\n")
+        params.write("    <toCluster> false </toCluster>\n")
+        params.write("    <tangaroa> true </tangaroa>\n")
+        params.write("    <partSize> " + str(round(bpy.context.scene.partsize,4)) + " </partSize>\n")
+        params.write("    <BOBJpre> " + str(bpy.context.scene.BOBJpre).lower() + " </BOBJpre>\n")
+        params.write("    <BOBJfin> " + str(bpy.context.scene.BOBJfin).lower() + " </BOBJfin>\n")
+        params.write("    <STLint> " + str(bpy.context.scene.STLint).lower() + " </STLint>\n")
+        params.write("    <STLsmint> " + str(bpy.context.scene.STLsmint).lower() + " </STLsmint>\n")
+        params.write("    <STLmov> " + str(bpy.context.scene.STLmov).lower() + " </STLmov>\n")
+        params.write("    <VTKvf> " + str(bpy.context.scene.VTKvf).lower() + " </VTKvf>\n")
+        params.write("    <VTKvel> " + str(bpy.context.scene.VTKvel).lower() + " </VTKvel>\n")
+        params.write("    <VTKvort> " + str(bpy.context.scene.VTKvort).lower() + " </VTKvort>\n")
+        params.write("</Output>\n\n<Geometry>\n")
+        oct = 0
+        oldFrame = bpy.context.scene.frame_current
+        bpy.context.scene.frame_set(bpy.context.scene.saveOffset)
+        for obj in bpy.data.objects:
+            for mod in obj.modifiers:
+                if mod.type == 'FLUID_SIMULATION':
+                    params.write("    <object" + str(oct) + ">\n")
+                    params.write("        <type" + str(oct) + "> " + mod.settings.type.lower() + " </type" + str(oct) + ">\n")
+                    if mod.settings.type == 'DOMAIN':
+                        if bpy.context.scene.simuscale == 0.0:
+                            size = mod.settings.simulation_scale
+                        else:
+                            size = bpy.context.scene.simuscale
+                        params.write("        <size> " + str(round(size,4)) + " </size>\n")
+                        params.write("        <location> " + ' '.join(str(round(obj.location[i],4)) for i in range(0,3)) + " </location>\n")
+                        params.write("        <rotation> " + ' '.join(str(round(obj.rotation_euler[i],4)) for i in range(0,3)) + " </rotation>\n")
+                        params.write("        <scale> " + ' '.join(str(round(obj.scale[i],4)) for i in range(0,3)) + " </scale>\n")
+                        params.write("        <cache> " + mod.settings.filepath + " </cache>\n")
+                    elif mod.settings.type == 'INFLOW':
+                        params.write("        <velocity" + str(oct) + "> " + ' '.join(str(round(mod.settings.inflow_velocity[i],4)) for i in range(0,3)) + " </velocity" + str(oct) + ">\n")
+                        if obj.animation_data:
+                            if obj.animation_data.action.fcurves[0].data_path == 'modifiers["Fluidsim"].settings.use':
+                                params.write("        <enabledFrame" + str(oct) + "> " + ' '.join(str(int(points.co[0])) for points in obj.animation_data.action.fcurves[0].keyframe_points) + " </enabledFrame" + str(oct) + ">\n")
+                                params.write("        <enabledSwitch" + str(oct) + "> " + ' '.join(str(int(points.co[1])) for points in obj.animation_data.action.fcurves[0].keyframe_points) + " </enabledSwitch" + str(oct) + ">\n")
+                    elif mod.settings.type == 'FLUID':
+                        params.write("        <velocity" + str(oct) + "> " + ' '.join(str(round(mod.settings.initial_velocity[i],4)) for i in range(0,3)) + " </velocity" + str(oct) + ">\n")
+                    elif mod.settings.type == 'OBSTACLE':
+                        if obj.animation_data:
+                            cct = int(obj.animation_data.action.fcurves[0].range()[1])
+                            params.write("        <motionPathX> " + ' '.join(str(round(obj.animation_data.action.fcurves[0].evaluate(i),4)) for i in range(int(round(bpy.context.scene.saveOffset)),cct)) + " </motionPathX>\n")
+                            params.write("        <motionPathY> " + ' '.join(str(round(obj.animation_data.action.fcurves[1].evaluate(i),4)) for i in range(int(round(bpy.context.scene.saveOffset)),cct)) + " </motionPathY>\n")
+                            params.write("        <motionPathZ> " + ' '.join(str(round(obj.animation_data.action.fcurves[2].evaluate(i),4)) for i in range(int(round(bpy.context.scene.saveOffset)),cct)) + " </motionPathZ>\n")
+                            if len(obj.animation_data.action.fcurves) > 3:
+                                params.write("        <rotationPathX> " + ' '.join(str(round(obj.animation_data.action.fcurves[3].evaluate(i),4)) for i in range(int(round(bpy.context.scene.saveOffset)),cct)) + " </rotationPathX>\n")
+                                params.write("        <rotationPathY> " + ' '.join(str(round(obj.animation_data.action.fcurves[4].evaluate(i),4)) for i in range(int(round(bpy.context.scene.saveOffset)),cct)) + " </rotationPathY>\n")
+                                params.write("        <rotationPathZ> " + ' '.join(str(round(obj.animation_data.action.fcurves[5].evaluate(i),4)) for i in range(int(round(bpy.context.scene.saveOffset)),cct)) + " </rotationPathZ>\n")
+                    params.write("        <m" + str(oct) + "> ")
+                    for vect in obj.matrix_basis:
+                        params.write(' '.join(str(round(vect[i],4)) for i in range(0,4)) + " ")
+                    params.write("</m" + str(oct) + ">\n        <v" + str(oct) + "> ")
+                    for vert in obj.data.vertices:
+                        params.write(' '.join(str(round(vert.co[i],4)) for i in range(0,3)) + " ")
+                    params.write("</v" + str(oct) + ">\n    </object" + str(oct) + ">\n")
+                    if (mod.settings.type == 'OBSTACLE' or mod.settings.type == 'FLUID'):
+                        bpy.ops.object.select_all(action='DESELECT')
+                        obj.select = True
+                        fileName = 'object' + str(oct) + '.stl'
+                        if bpy.app.version < (2, 77, 0):
+                            bpy.ops.export_mesh.stl(filepath=fileName)
+                        else:
+                            bpy.ops.export_mesh.stl(filepath=fileName, use_selection=True)
+                    oct = oct + 1
+        bpy.context.scene.frame_set(oldFrame)
+        params.write("    <objectCount> " + str(oct) + " </objectCount>\n")
+        params.write("</Geometry>\n")
+
+    print('Initializing simulation (this can take quite a while...)')
+    crs = int(round(bpy.context.scene.cores))
+    if crs == 1:
+        subprocess.call("./palander_engine")
+    else:
+        subprocess.call(["mpirun", "-np", str(crs), "./palander_engine"])
+
+    with open("tangaroa_scene.yaml","w") as params:
+        params.write('scene:\n')
+        params.write('    initfile: tangaroa.bgeo\n')
+        params.write('    cache_prefix: test\n')
+        params.write('    fps: 25\n')
+        params.write('    sim_start_time: 0.0\n')
+        params.write('    sim_end_time: ' + str(round(bpy.context.scene.simutime,4)) + '\n')
+        for obj in bpy.data.objects:
+            for mod in obj.modifiers:
+                if mod.type == 'FLUID_SIMULATION':
+                    if mod.settings.type == 'DOMAIN':
+                        maxc = max(obj.scale)
+                        xmin = (obj.location[0]-obj.scale[0])*size/maxc
+                        xmax = (obj.location[0]+obj.scale[0])*size/maxc
+                        ymin = (obj.location[1]-obj.scale[1])*size/maxc
+                        ymax = (obj.location[1]+obj.scale[1])*size/maxc
+                        zmin = (obj.location[2]-obj.scale[2])*size/maxc
+                        zmax = (obj.location[2]+obj.scale[2])*size/maxc
+        params.write('    min_x: ' + str(round(xmin,1)) + '\n')
+        params.write('    min_y: ' + str(round(ymin,1)) + '\n')
+        params.write('    min_z: ' + str(round(zmin,1)) + '\n')
+        params.write('    max_x: ' + str(round(xmax,1)) + '\n')
+        params.write('    max_y: ' + str(round(ymax,1)) + '\n')
+        params.write('    max_z: ' + str(round(zmax,1)) + '\n')
+        params.write('    num_mpi: 1\n')
+        params.write('    x_split: 1\n')
+        params.write('    y_split: 1\n')
+        params.write('    z_split: 1\n')
+        params.write('    num_solver_per_mpi: 8\n')
+        params.write('    x_split_solver : 4\n')
+        params.write('    y_split_solver : 2\n')
+        params.write('    z_split_solver : 1\n')
+        params.write('particle_data:\n')
+        params.write('    visc: 0.01\n')
+        params.write('    st_coeff: 0.1\n')
+        params.write('    b_fric: 0.1\n')
+
+#   slength = bpy.context.scene.partsize * 4.0
+    slength = 0.1
+    with open("tangaroa_system.yaml","w") as params:
+        params.write('solver:\n')
+        params.write('    pressure_model: WCSPH\n')
+        params.write('    st_model: NO_ST\n\n')
+        params.write('application:\n')
+        params.write('    export_single_samples: false\n')
+        params.write('    export_bin_attrs: false\n\n')
+        params.write('system:\n')
+        params.write('    variable_stepping: false\n')
+        params.write('    gravity: true\n')
+        params.write('    stepsize: 0.001\n')
+        params.write('    smoothing_length: ' + str(round(slength,4)) + '\n')
+        params.write('    particle_size: ' + str(round(bpy.context.scene.partsize,4)) + '\n')
+
+    subprocess.Popen(["./tangaroa_mpi"])
+    print('Done! Please wait for the particle simulation to complete before accessing the results.')
+
+def mainImport(context):
+    print('Importing particle simulation results...')
+    path = bpy.path.abspath(bpy.context.scene.localpath) + "out/"
+    os.chdir(path)
+    pathfile = path + "tangaroa_simulation.xyz"
+    if not os.path.exists(pathfile):
+        subprocess.call(["xyzmerge", "test"])
+        with open(pathfile, 'w') as outfile:
+            for files in sorted(os.listdir(path)):
+                if re.search("merged_[0-9]{5}.xyz", files):
+                    with open(path + files, "r") as infile:
+                        outfile.write(infile.read())
+    radius = 2.0 * bpy.context.scene.partsize
+    bpy.ops.import_mesh.xyz(filepath=pathfile, use_center_all=False, use_frames=True, scale_ballradius=radius)
+    print('Particle results imported!')
+
 def initProps():
     bpy.types.Scene.fluid = bpy.props.EnumProperty(
         items = [('4',"Blood",'Blood (4)'),
@@ -503,6 +680,16 @@ def initProps():
         description = "Path to DualSPHysics root directory"
         )
 
+    bpy.types.Scene.partsize = bpy.props.FloatProperty(
+        name = "Particle size",
+        default = 0.025,
+        min = 0.001,
+        max = 1.0,
+        step = 0.1,
+        precision = 3,
+        description = "Particle size in simulation"
+        )
+
     bpy.types.Scene.BOBJpre = bpy.props.BoolProperty(
         name = "Preview Surface",
         default = True,
@@ -543,6 +730,12 @@ def initProps():
         name = "Velocity",
         default = False,
         description = "Include velocity field in VTK output"
+        )
+
+    bpy.types.Scene.VTKspeeds = bpy.props.BoolProperty(
+        name = "Speeds",
+        default = False,
+        description = "Output speeds in three separate VTK files (x, y, z)"
         )
 
     bpy.types.Scene.VTKvort = bpy.props.BoolProperty(
@@ -614,6 +807,7 @@ def removeProps():
     del bpy.types.Scene.smooooth
     del bpy.types.Scene.useMask
     del bpy.types.Scene.SPHpath
+    del bpy.types.Scene.partsize
     del bpy.types.Scene.BOBJpre
     del bpy.types.Scene.BOBJfin
     del bpy.types.Scene.STLint
@@ -621,6 +815,7 @@ def removeProps():
     del bpy.types.Scene.STLmov
     del bpy.types.Scene.VTKvf
     del bpy.types.Scene.VTKvel
+    del bpy.types.Scene.VTKspeeds
     del bpy.types.Scene.VTKvort
     del bpy.types.Scene.localpath
     del bpy.types.Scene.cores
@@ -686,6 +881,25 @@ class Floating(bpy.types.Panel):
         row = col.row(align=True)
         row.operator("object.retrieve", text="Retrieve Float Path")
 
+class Particle(bpy.types.Panel):
+    bl_label = "Tangaroa"
+    bl_idname = "OBJECT_PT_PARTICLE"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_context = "objectmode"
+    bl_category = "Palander"
+
+    def draw(self, context):
+        layout = self.layout
+        scn = context.scene
+        col = layout.column(align=True)
+        row = col.row(align=True)
+        row.prop(scn, "partsize")
+        row = col.row(align=True)
+        row.operator("object.tangaroa", text="Particle Simulation")
+        row = col.row(align=True)
+        row.operator("object.xyzget", text="Import Results")
+
 class HLRSAccess(bpy.types.Panel):
     bl_label = "Palabos"
     bl_idname = "OBJECT_PT_HLRS"
@@ -720,6 +934,8 @@ class HLRSAccess(bpy.types.Panel):
         row.prop(scn, "VTKvf")
         row = col.row(align=True)
         row.prop(scn, "VTKvel")
+        row = col.row(align=True)
+        row.prop(scn, "VTKspeeds")
         row = col.row(align=True)
         row.prop(scn, "VTKvort")
         row = col.row(align=True)
@@ -813,6 +1029,34 @@ class Retrieve(bpy.types.Operator):
 
     def execute(self, context):
         mainRetrieve(context)
+        return {'FINISHED'}
+
+class Tangaroa(bpy.types.Operator):
+    """Execute Particle Simulation"""
+    bl_idname = "object.tangaroa"
+    bl_label = "Execute Particle Simulation"
+    bl_options = {'REGISTER'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        mainTangaroa(context)
+        return {'FINISHED'}
+
+class XYZget(bpy.types.Operator):
+    """Import Particle Simulation Results"""
+    bl_idname = "object.xyzget"
+    bl_label = "Import Particle Simulation Results"
+    bl_options = {'REGISTER'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        mainImport(context)
         return {'FINISHED'}
 
 def register():

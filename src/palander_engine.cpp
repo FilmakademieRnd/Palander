@@ -34,6 +34,7 @@
 #include "palabos3D.hh"
 
 #include <zlib.h>
+// #include <partio/src/lib/Partio.h> // Tangaroa disabled
 
 using namespace plb;
 
@@ -41,6 +42,7 @@ using namespace plb;
 
 #define OUTDIR     "tmp/"
 #define INFILE     "toPalabos.xml"
+#define BGEOFILE   "tangaroa.bgeo"
 
 #define FLAG_SAVE  "tmp/flag"
 #define J_SAVE     "tmp/j"
@@ -50,13 +52,17 @@ using namespace plb;
 #define RHO_SAVE   "tmp/rhoBar"
 #define VF_SAVE    "tmp/volFrac"
 
-#define BDNUM      1000
+#define BDNUM      10000
 #define CTANG      80.0
 
 #define FPS        25
 #define PADDING    5
 #define STRMAX     500
 #define MAX_REFINE 16
+
+#define X          1
+#define Y          2
+#define Z          3
 
 typedef double T;
 
@@ -72,9 +78,9 @@ plint N, nx, ny, nz;
 T lx, ly, lz, size, lxHalf, lyHalf, lzHalf;
 T dx, dy, dz, dxmin, dymin, dzmin, dxmax, dymax, dzmax;
 T delta_t, delta_x, rotNorm, velNorm;
-T uLB, nuPhys, nuLB, tau, omega, Bo, surfaceTensionLB, contactAngle;
-bool disableST, continuous, smooooth, useMask, foundMask, toCluster;
-bool BOBJpre, BOBJfin, STLint, STLsmint, STLmov, VTKvf, VTKvel, VTKvort;
+T uLB, nuPhys, nuLB, tau, omega, Bo, surfaceTensionLB, contactAngle, partSize;
+bool disableST, continuous, smooooth, useMask, foundMask, toCluster, tangaroa;
+bool BOBJpre, BOBJfin, STLint, STLsmint, STLmov, VTKvf, VTKvel, VTKspeeds, VTKvort;
 Array<T,3> externalForce;
 std::string basePath, cache, maskFile, *objType;
 std::vector<float> location, rotation, sceneScale;
@@ -197,15 +203,15 @@ Array<T,3> calculateVelocity(plint frame, Array<T,3> vertex, const std::vector<T
 
 }
 
-bool checkInlet(plint frame, std::vector<plint> enabledFrame, std::vector<plint> enabledSwitch)
+bool checkInlet(plint frame, std::vector<plint> thisFrame, std::vector<plint> thisSwitch)
 {
-    plint i, iMax = enabledFrame.size();
+    plint i, iMax = thisFrame.size();
 
     if (iMax == 0) return(false);
-    for (i = 0; i < iMax && frame >= enabledFrame[i]; i++);
+    for (i = 0; i < iMax && frame >= thisFrame[i]; i++);
     if (i > 0) --i;
 
-    return(enabledSwitch[i] == 1 ? true : false);
+    return(thisSwitch[i] == 1 ? true : false);
 
 }
 
@@ -249,14 +255,13 @@ void writeResults(FreeSurfaceFields3D<T,DESCRIPTOR> *fields, plint iT)
                 DEFscaledMesh<T>* defMesh = new DEFscaledMesh<T>(triangleSet);
                 std::vector<Array<T,3> > vertexList = defMesh->getVertexList();
                 std::vector<Edge> edgeList = defMesh->getEdgeList();
-                delete defMesh;
 
                 numVertices = (int)(vertexList.size());
                 gzf = gzopen(outfile.c_str(), "wb1");
 
                 // Write vertex list
                 gzwrite(gzf, &numVertices, sizeof(int));
-                for (size_t i = 0; i < numVertices; i++) {
+                for (int i = 0; i < numVertices; i++) {
                     for (int j = 0; j < 3; j++) {
                         tempF = ((float)(vertexList[i][j])-location[j])/sceneScale[j];
                         gzwrite(gzf, &tempF, sizeof(float));
@@ -265,21 +270,22 @@ void writeResults(FreeSurfaceFields3D<T,DESCRIPTOR> *fields, plint iT)
                 // Write (dummy) normals list
                 tempF = 1.0;
                 gzwrite(gzf, &numVertices, sizeof(int));
-                for (size_t i = 0; i < numVertices; i++) {
+                for (int i = 0; i < numVertices; i++) {
                     for (int j = 0; j < 3; j++) {
                         gzwrite(gzf, &tempF, sizeof(float));
                     }
                 }
                 // Write triangle index list
-                tempI = triangles.size();
+                tempI = (int)(triangles.size());
                 gzwrite(gzf, &tempI, sizeof(int));
-                for (plint i = 0; i < tempI; i++) {
-                    for (plint j = 2; j >= 0; j--) {
-                        int index = edgeList[3*i + j].pv;
+                for (int i = 0; i < tempI; i++) {
+                    for (int j = 2; j >= 0; j--) {
+                        int index = (int)(edgeList[3*i + j].pv);
                         gzwrite(gzf, &index, sizeof(int));
                     }
                 }
                 gzclose(gzf);
+                delete defMesh;
             }
         }
     }
@@ -316,14 +322,13 @@ void writeResults(FreeSurfaceFields3D<T,DESCRIPTOR> *fields, plint iT)
                 DEFscaledMesh<T>* defMesh = new DEFscaledMesh<T>(triangleSet);
                 std::vector<Array<T,3> > vertexList = defMesh->getVertexList();
                 std::vector<Edge> edgeList = defMesh->getEdgeList();
-                delete defMesh;
 
                 numVertices = (int)(vertexList.size());
                 gzf = gzopen(outfile.c_str(), "wb1");
 
                 // Write vertex list
                 gzwrite(gzf, &numVertices, sizeof(int));
-                for (size_t i = 0; i < numVertices; i++) {
+                for (int i = 0; i < numVertices; i++) {
                     for (int j = 0; j < 3; j++) {
                         tempF = ((float)(vertexList[i][j])-location[j])/sceneScale[j];
                         gzwrite(gzf, &tempF, sizeof(float));
@@ -332,31 +337,108 @@ void writeResults(FreeSurfaceFields3D<T,DESCRIPTOR> *fields, plint iT)
                 // Write (dummy) normals list
                 tempF = 1.0;
                 gzwrite(gzf, &numVertices, sizeof(int));
-                for (size_t i = 0; i < numVertices; i++) {
+                for (int i = 0; i < numVertices; i++) {
                     for (int j = 0; j < 3; j++) {
                         gzwrite(gzf, &tempF, sizeof(float));
                     }
                 }
                 // Write triangle index list
-                tempI = triangles.size();
+                tempI = (int)(triangles.size());
                 gzwrite(gzf, &tempI, sizeof(int));
-                for (plint i = 0; i < tempI; i++) {
-                    for (plint j = 2; j >= 0; j--) {
-                        int index = edgeList[3*i + j].pv;
+                for (int i = 0; i < tempI; i++) {
+                    for (int j = 2; j >= 0; j--) {
+                        int index = (int)(edgeList[3*i + j].pv);
                         gzwrite(gzf, &index, sizeof(int));
                     }
                 }
                 gzclose(gzf);
+                delete defMesh;
             }
         }
     }
 
     if (VTKvf || VTKvel || VTKvort) {
-        VtkImageOutput3D<T> vtkOut(createFileName("VTKoutput_", (int)(iT*1000.0*delta_t), PADDING)+"ms", 1.);
+        ParallelVtkImageOutput3D<T> vtkOut(createFileName("VTKoutput_", (int)(iT*1000.0*delta_t), PADDING)+"ms", 1.);
         if (VTKvf) vtkOut.writeData<float>(fields->volumeFraction, "vf", 1.);
         if (VTKvel) vtkOut.writeData<3,float>(*computeVelocity(fields->lattice), "vel", delta_x/delta_t);
         if (VTKvort) vtkOut.writeData<3,float>(*computeVorticity(*computeVelocity(fields->lattice)), "vort", 1./delta_t);
     }
+    if (VTKspeeds) {
+        ParallelVtkImageOutput3D<T> outX(createFileName("velX_", iT/outIter, 4), 1.);
+        ParallelVtkImageOutput3D<T> outY(createFileName("velY_", iT/outIter, 4), 1.);
+        ParallelVtkImageOutput3D<T> outZ(createFileName("velZ_", iT/outIter, 4), 1.);
+        outX.writeData<float>(*computeVelocityComponent(fields->lattice, 0), "velX", delta_x/delta_t);
+        outY.writeData<float>(*computeVelocityComponent(fields->lattice, 1), "velY", delta_x/delta_t);
+        outZ.writeData<float>(*computeVelocityComponent(fields->lattice, 2), "velZ", delta_x/delta_t);
+    }
+
+}
+
+void bgeoOutput(MultiScalarField3D<int> values) {
+//  BGEO output & Tangaroa disabled
+/*  Partio::ParticlesDataMutable* partio_data = Partio::create();
+
+    Partio::ParticleAttribute posAttr         = partio_data->addAttribute("position",Partio::VECTOR,3);
+    Partio::ParticleAttribute ptypeAttr       = partio_data->addAttribute("p_type",Partio::INT,1);
+    Partio::ParticleAttribute activeAttr      = partio_data->addAttribute("p_active",Partio::INT,1);
+
+    int x, y, z, maxx, maxy, maxz;
+    int particlecounter = 0;
+
+    maxx = sceneScale[0]/partSize;
+    maxy = sceneScale[2]/partSize;
+    maxz = sceneScale[1]/partSize;
+
+    for(z = 0; z < maxz; z++) {
+        for(y = 0; y < maxy; y++) {
+            for(x = 0; x < maxx; x++) {
+                int xx = (int) ((float)nx*(float)x/(float)maxx);
+                int yy = (int) ((float)ny*(float)y/(float)maxy);
+                int zz = (int) ((float)nz*(float)z/(float)maxz);
+                int value;
+                if (x == maxx-1 || y == maxy-1 || z == maxz-1) value = 4;
+                else value = values.get(xx,yy,zz);
+                if (value) {
+                    partio_data->addParticle();
+
+                    float *fpos = partio_data->dataWrite<float>(posAttr, particlecounter);
+                    fpos[0] = x * partSize * 2.0 - sceneScale[0];
+                    fpos[1] = z * partSize * 2.0 - sceneScale[2];
+                    fpos[2] = y * partSize * 2.0 - sceneScale[1];
+
+                    int *ipt = partio_data->dataWrite<int>(ptypeAttr, particlecounter);
+                    switch (value) {
+                        case 1:
+                        case 2:
+                            *ipt = 1;
+                            break;
+                        case 4:
+                        default:
+                            *ipt = 0;
+                            break;
+                    }
+
+                    int* iact = partio_data->dataWrite<int>(activeAttr, particlecounter);
+                    switch (value) {
+                        case 1:
+                        case 2:
+                            *iact = 1;
+                            break;
+                        case 4:
+                        default:
+                            *iact = 0;
+                            break;
+                    }
+
+                    particlecounter++;
+                }
+            }
+        }
+    }
+    Partio::write(BGEOFILE, *partio_data);
+    partio_data->release(); */
+
+    exit(99);
 
 }
 
@@ -391,6 +473,20 @@ void getDimensions(plint index, std::vector<T> *matrix, std::vector<T> *vertices
 
 }
 
+void splitFloat(T num, plint *left, plint *right)
+{
+    T outright;
+
+    *left = (plint) num;
+    *right = (plint) ((num-(T)(*left))*100.0); // Two-digit precision is enough
+
+/*  outright = num-(T)(*left);
+
+    while (outright != (T)((plint)(outright))) outright *= 10.0;
+    *right = (plint) outright; */
+
+}
+
 class ForwardVelocity {
 public:
     ForwardVelocity(std::vector<Array<T,3> > const& vertices_)
@@ -411,16 +507,18 @@ int main(int argc, char **argv)
     global::directories().setInputDir("./");
     global::directories().setOutputDir(outDir+"/");
 
-    plint domainIndex, inletIndex, outletIndex;
+    plint domainIndex, outletIndex;
     const plint ibIter = 4;
     plint iniIter, iniTime, maxTime;
     std::string obj, dat, *fName;
     std::stringstream sstm;
     bool isInlet = false, isOutlet = false;
+    std::vector<plint> indir;
     std::vector<Box3D> bounds;
     std::vector<T> inVel;
+    std::vector<bool> inletIndex, activeInlet;
     std::vector<Array<T,3> > velocity;
-    std::vector<plint> enabledFrame, enabledSwitch;
+    std::vector<std::vector<plint> > enabledFrame, enabledSwitch;
 
     // Immersed Boundary Method variables
     std::vector<plint> startIds;
@@ -446,9 +544,11 @@ int main(int argc, char **argv)
     xmlFile["Numerics"]["extraSmooth"].read(smooooth);
     xmlFile["Numerics"]["useMask"].read(useMask);
 
-    xmlFile["Output"]["maskFile"].read(maskFile);
+    if (useMask) xmlFile["Output"]["maskFile"].read(maskFile);
     xmlFile["Output"]["basePath"].read(basePath);
     xmlFile["Output"]["toCluster"].read(toCluster);
+    xmlFile["Output"]["tangaroa"].read(tangaroa);
+    if (tangaroa) xmlFile["Output"]["partSize"].read(partSize);
     xmlFile["Output"]["BOBJpre"].read(BOBJpre);
     xmlFile["Output"]["BOBJfin"].read(BOBJfin);
     xmlFile["Output"]["STLint"].read(STLint);
@@ -456,6 +556,7 @@ int main(int argc, char **argv)
     xmlFile["Output"]["STLmov"].read(STLmov);
     xmlFile["Output"]["VTKvf"].read(VTKvf);
     xmlFile["Output"]["VTKvel"].read(VTKvel);
+    xmlFile["Output"]["VTKspeeds"].read(VTKspeeds);
     xmlFile["Output"]["VTKvort"].read(VTKvort);
 
     xmlFile["Geometry"]["objectCount"].read(objCount);
@@ -513,7 +614,10 @@ int main(int argc, char **argv)
             }
         }
         if (objType[i] == "fluid") {
-            xmlFile["Geometry"][obj]["initialVelocity"].read(inVel);
+            sstm << "velocity" << i;
+            dat = sstm.str();
+            sstm.str(""); sstm.clear();
+            xmlFile["Geometry"][obj][dat].read(inVel);
             for (plint xyz = 0; xyz < 3; xyz++)
                 tempA[xyz] = inVel[xyz];
             inVel.clear(); inVel.resize(0);
@@ -534,19 +638,37 @@ int main(int argc, char **argv)
             }
         }
         if (objType[i] == "inflow") {
+            std::vector<plint> tempFrame, tempSwitch;
             isInlet = true;
-            inletIndex = i;
-            xmlFile["Geometry"][obj]["inflowVelocity"].read(inVel);
+            inletIndex.push_back(true);
+            sstm << "velocity" << i;
+            dat = sstm.str();
+            sstm.str(""); sstm.clear();
+            xmlFile["Geometry"][obj][dat].read(inVel);
             for (plint xyz = 0; xyz < 3; xyz++)
                 tempA[xyz] = inVel[xyz];
             inVel.clear(); inVel.resize(0);
             try {
-                xmlFile["Geometry"][obj]["enabledFrame"].read(enabledFrame);
-                xmlFile["Geometry"][obj]["enabledSwitch"].read(enabledSwitch);
+                sstm << "enabledFrame" << i;
+                dat = sstm.str();
+                sstm.str(""); sstm.clear();
+                xmlFile["Geometry"][obj][dat].read(tempFrame);
+                sstm << "enabledSwitch" << i;
+                dat = sstm.str();
+                sstm.str(""); sstm.clear();
+                xmlFile["Geometry"][obj][dat].read(tempSwitch);
             } catch (plb::PlbIOException) {
-                enabledFrame.push_back(0);
-                enabledSwitch.push_back(1);
+                tempFrame.push_back(0);
+                tempSwitch.push_back(1);
             }
+            enabledFrame.push_back(tempFrame);
+            enabledSwitch.push_back(tempSwitch);
+        } else {
+            std::vector<plint> tempV;
+            tempV.push_back(0);
+            inletIndex.push_back(false);
+            enabledFrame.push_back(tempV);
+            enabledSwitch.push_back(tempV);
         }
         if (objType[i] == "outflow") {
             isOutlet = true;
@@ -602,8 +724,7 @@ int main(int argc, char **argv)
     maxIter = util::roundToInt(maxTime/(1000.0*delta_t));
 
     if (useMask) {
-        if (!toCluster)
-            maskFile = basePath + maskFile;
+        if (!toCluster) maskFile = basePath + maskFile;
         plb_ifstream infile(maskFile.c_str());
         if (infile.good()) {
             pcout << "Found mask file!" << std::endl;
@@ -631,7 +752,8 @@ int main(int argc, char **argv)
             triangleSet.translate(Array<T,3>(-dxmin,-dymin,-dzmin));
             triangleSet.scale(lx/dx,ly/dy,lz/dz);
             fluidMesh.push_back(new DEFscaledMesh<T>(triangleSet));
-        } else if (objType[i] == "wall") {
+        }
+        if (objType[i] == "wall") {
             staticSurfaces++;
             TriangleSet<T> triangleSet(fName[i], DBL);
             triangleSet.translate(Array<T,3>(-dxmin,-dymin,-dzmin));
@@ -641,7 +763,8 @@ int main(int argc, char **argv)
             oss << "staticobject_" << staticSurfaces-1 << "_";
             std::string fn = oss.str();
             triangleSet.writeBinarySTL(outDir + createFileName(fn, 0, PADDING) + ".stl");
-        } else if (objType[i] == "obstacle") {
+        }
+        if (objType[i] == "obstacle") {
             movingSurfaces++;
             TriangleSet<T> *triangleSet = new TriangleSet<T>(fName[i], DBL);
             triangleSet->translate(Array<T,3>(-dxmin,-dymin,-dzmin));
@@ -668,23 +791,28 @@ int main(int argc, char **argv)
                 flags.push_back(i);
             }
             movingObstacles.push_back(connectedTriangleSet);
-/*      } else if (objType[i] == "inflow") {  // --- Removed for causing the "squirt bug" - must disable debug mode!
+        }
+        if (objType[i] == "inflow") {
             if (fabs(velocity[i][0]) > fabs(velocity[i][2])) {
                 if (fabs(velocity[i][0]) > fabs(velocity[i][1])) {
                     plint avg = (bounds[i].x0 + bounds[i].x1) / 2;
-                    bounds[i].x0 = bounds[i].x1 = avg;
+//                  bounds[i].x0 = bounds[i].x1 = avg;
+                    if (velocity[i][0] < 0) indir.push_back(X); else indir.push_back(-X);
                 } else {
                     plint avg = (bounds[i].y0 + bounds[i].y1) / 2;
-                    bounds[i].y0 = bounds[i].y1 = avg;
+//                  bounds[i].y0 = bounds[i].y1 = avg;
+                    if (velocity[i][1] < 0) indir.push_back(Y); else indir.push_back(-Y);
                 }
             } else if (fabs(velocity[i][2]) > fabs(velocity[i][1])) {
                 plint avg = (bounds[i].z0 + bounds[i].z1) / 2;
-                bounds[i].z0 = bounds[i].z1 = avg;
+//              bounds[i].z0 = bounds[i].z1 = avg;
+                if (velocity[i][2] < 0) indir.push_back(Z); else indir.push_back(-Z);
             } else {
                 plint avg = (bounds[i].y0 + bounds[i].y1) / 2;
-                bounds[i].y0 = bounds[i].y1 = avg;
-            } */
-        }
+//              bounds[i].y0 = bounds[i].y1 = avg;
+                if (velocity[i][1] < 0) indir.push_back(Y); else indir.push_back(-Y);
+            }
+        } else indir.push_back(0);
     }
     
     if (disableST) {
@@ -726,16 +854,29 @@ int main(int argc, char **argv)
     boundaryCondition->setVelocityConditionOnBlockBoundaries(fields->lattice, fields->lattice.getBoundingBox(),
         boundary::outflow);
     if (foundMask) {
-        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::wall, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::wall);
-        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::fluid, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::fluid);
-        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::interface, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::interface);
-        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::empty, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::empty);
+        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::wall, fields->flag.getBoundingBox().enlarge(-1), (int)freeSurfaceFlag::wall);
+        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::fluid, fields->flag.getBoundingBox().enlarge(-1), (int)freeSurfaceFlag::fluid);
+        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::interface, fields->flag.getBoundingBox().enlarge(-1), (int)freeSurfaceFlag::interface);
+        setToConstant(fields->flag, *mask, (int)freeSurfaceFlag::empty, fields->flag.getBoundingBox().enlarge(-1), (int)freeSurfaceFlag::empty);
     } else {
         setToConstant(fields->flag, fields->flag.getBoundingBox(), (int)freeSurfaceFlag::wall);
         setToFunction(fields->flag, fields->flag.getBoundingBox().enlarge(-1), initialFluidFlags);
-//      setToFunction(fields->flag, fields->flag.getBoundingBox(), initialFluidFlags);
     }
-    if (isInlet) setToConstant(fields->flag, bounds[inletIndex], (int)freeSurfaceFlag::fluid);
+    if (tangaroa) {
+        bgeoOutput(fields->flag);
+        delete boundaryCondition;
+        delete dynamics;
+        delete fields;
+        exit(3);
+    }
+    saveIndex = iniIter/outIter + saveOffset;
+    if (isInlet)
+        for (plint i = 0; i < objCount; i++)
+            if (inletIndex[i]) {
+                bool tempInlet = checkInlet(saveIndex, enabledFrame[i], enabledSwitch[i]);
+                activeInlet.push_back(tempInlet);
+                if (tempInlet) setToConstant(fields->flag, bounds[i], (int)freeSurfaceFlag::fluid);
+            } else activeInlet.push_back(false);
 
     fields->lattice.toggleInternalStatistics(false);
     fields->periodicityToggleAll(false);
@@ -743,11 +884,20 @@ int main(int argc, char **argv)
 
     if (useMask) {
         if (!foundMask) {
+            plint xx, yy, zz, outa, outb;
             plb_ofstream omf(maskFile.c_str());
-            for (plint xx = 0; xx < nx; xx++)
-                for (plint yy = 0; yy < ny; yy++)
-                    for (plint zz = 0; zz < nz; zz++)
+            splitFloat(lx/delta_x, &outa, &outb);
+            omf << outa << " " << outb << " ";
+            splitFloat(ly/delta_x, &outa, &outb);
+            omf << outa << " " << outb << " ";
+            splitFloat(lz/delta_x, &outa, &outb);
+            omf << outa << " " << outb << " ";
+            for (xx = 0; xx < nx; xx++)
+                for (yy = 0; yy < ny; yy++) {
+                    if (!xx && !yy) zz = 6; else zz = 0;
+                    for (; zz < nz; zz++)
                         omf << fields->flag.get(xx,yy,zz) << " ";
+                }
             global::mpi().barrier();
         }
 
@@ -796,7 +946,29 @@ int main(int argc, char **argv)
     for (plint i = 0; i < objCount; i++) {
         if ((objType[i] == "fluid" || objType[i] == "inflow")
                     && !(velocity[i][0] == 0.0 && velocity[i][1] == 0.0 && velocity[i][2] == 0.0)) {
-            boundaryCondition->addVelocityBoundary0N(bounds[i], fields->lattice); // Check normal orientation!
+            switch (indir[i]) {
+                case X:
+                    boundaryCondition->addVelocityBoundary0P(bounds[i], fields->lattice);
+                    break;
+                case -X:
+                    boundaryCondition->addVelocityBoundary0N(bounds[i], fields->lattice);
+                    break;
+                case Y:
+                    boundaryCondition->addVelocityBoundary1P(bounds[i], fields->lattice);
+                    break;
+                case -Y:
+                    boundaryCondition->addVelocityBoundary1N(bounds[i], fields->lattice);
+                    break;
+                case Z:
+                    boundaryCondition->addVelocityBoundary2P(bounds[i], fields->lattice);
+                    break;
+                case -Z:
+                    boundaryCondition->addVelocityBoundary2N(bounds[i], fields->lattice);
+                    break;
+                default:
+                    pcout << "Inflow not orthogonal!" << std::endl;
+                    exit(2);
+            }
             setBoundaryVelocity(fields->lattice, bounds[i], velocity[i]);
         }
     }
@@ -805,8 +977,6 @@ int main(int argc, char **argv)
     // Main iteration loop
 
     pcout << "Starting simulation..." << std::endl;
-    saveIndex = iniIter/outIter + saveOffset;
-    isInlet = checkInlet(saveIndex, enabledFrame, enabledSwitch);
     rotNorm = FPS * delta_t;
     velNorm = rotNorm * (lx/dx) / delta_x;
     for (iT = iniIter; iT <= maxIter; iT++) {
@@ -816,12 +986,14 @@ int main(int argc, char **argv)
             pcout << "Simulation time: " << iT*1000.0*delta_t << "/" << maxTime << " milliseconds" << std::endl;
             fields->lattice.toggleInternalStatistics(true);
         }
-        bool tempInlet = isInlet;
+        std::vector<bool> tempInlet = activeInlet;
         if (iT % outIter == 0 || iT == maxIter) {
             pcout << "Writing results at time " << iT * delta_t << " sec (frame " << saveIndex << ")" << std::endl;
             writeResults(fields, iT);
             saveIndex++;
-            isInlet = checkInlet(saveIndex, enabledFrame, enabledSwitch);
+            if (isInlet)
+                for (plint i = 0; i < objCount; i++)
+                    activeInlet[i] = checkInlet(saveIndex, enabledFrame[i], enabledSwitch[i]);
             if (STLmov) {
                 for (plint iSurface = 0; iSurface < movingSurfaces; iSurface++) {
                     TriangleSet<T> *triangleSet = movingObstacles[iSurface].toTriangleSet(DBL, &vertexArray,
@@ -850,17 +1022,41 @@ int main(int argc, char **argv)
             }
         }
         if (isInlet) {
-            if (!tempInlet) {
-                setToConstant(fields->flag, bounds[inletIndex], (int)freeSurfaceFlag::fluid);
-                applyProcessingFunctional(new PartiallyDefaultInitializeFreeSurface3D<T,DESCRIPTOR>(dynamics->clone(), externalForce, rhoEmpty),
-                    bounds[inletIndex].enlarge(1), fields->freeSurfaceArgs);
-                OnLatticeBoundaryCondition3D<T,DESCRIPTOR>*
-                    newBoundaryCondition = createLocalBoundaryCondition3D<T,DESCRIPTOR>();
-                newBoundaryCondition->addVelocityBoundary0N(bounds[inletIndex], fields->lattice);
-                setBoundaryVelocity(fields->lattice, bounds[inletIndex], velocity[inletIndex]);
-                delete newBoundaryCondition;
+            for (plint i = 0; i < objCount; i++) {
+                if (activeInlet[i] && !tempInlet[i]) {
+                    setToConstant(fields->flag, bounds[i], (int)freeSurfaceFlag::fluid);
+                    applyProcessingFunctional(new PartiallyDefaultInitializeFreeSurface3D<T,DESCRIPTOR>(dynamics->clone(), externalForce, rhoEmpty),
+                        bounds[i].enlarge(1), fields->freeSurfaceArgs);
+                    OnLatticeBoundaryCondition3D<T,DESCRIPTOR>*
+                        newBoundaryCondition = createLocalBoundaryCondition3D<T,DESCRIPTOR>();
+                    switch (indir[i]) {
+                        case X:
+                            newBoundaryCondition->addVelocityBoundary0P(bounds[i], fields->lattice);
+                            break;
+                        case -X:
+                            newBoundaryCondition->addVelocityBoundary0N(bounds[i], fields->lattice);
+                            break;
+                        case Y:
+                            newBoundaryCondition->addVelocityBoundary1P(bounds[i], fields->lattice);
+                            break;
+                        case -Y:
+                            newBoundaryCondition->addVelocityBoundary1N(bounds[i], fields->lattice);
+                            break;
+                        case Z:
+                            newBoundaryCondition->addVelocityBoundary2P(bounds[i], fields->lattice);
+                            break;
+                        case -Z:
+                            newBoundaryCondition->addVelocityBoundary2N(bounds[i], fields->lattice);
+                            break;
+                        default:
+                            pcout << "Inflow not orthogonal!" << std::endl;
+                            exit(2);
+                    }
+                    setBoundaryVelocity(fields->lattice, bounds[i], velocity[i]);
+                    delete newBoundaryCondition;
+                }
+                if (activeInlet[i]) applyProcessingFunctional(new InletConstVolumeFraction3D<T,DESCRIPTOR>(1.002), bounds[i], fields->freeSurfaceArgs);
             }
-            applyProcessingFunctional(new InletConstVolumeFraction3D<T,DESCRIPTOR>(1.002), bounds[inletIndex], fields->freeSurfaceArgs);
         }
         if (isOutlet)
             applyProcessingFunctional(new OutletMaximumVolumeFraction3D<T,DESCRIPTOR>(0.5), bounds[outletIndex], fields->freeSurfaceArgs);

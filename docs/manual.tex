@@ -200,9 +200,9 @@ left-hand side; the fluid simulation modifiers can be found on the ``Physics'' t
 For a successful simulation, you need one cuboid domain object, inside of which all of the water simulation 
 happens. The sides of this cuboid act as walls for the fluid, but any non-fluid objects can exist partially 
 or completely outside of the domain --- the domain walls won't affect them. For there to be any fluid inside 
-of the domain, you need to put in one or more fluid objects or an inflow object. Then, you can use static or 
-dynamic obstacle objects to influence the motion of the fluid during the simulation, as long as this happens 
-withing the confines of the domain.
+of the domain, you need to put in one or more fluid or inflow objects. Then, you can use static or dynamic 
+obstacle objects to influence the motion of the fluid during the simulation, as long as this happens withing 
+the confines of the domain.
 
 \subsection{Explicit Palander Parameters}
 
@@ -235,10 +235,9 @@ and try to load a previously saved state when starting.
 \item[Extra-smooth surface:] This will run a smoothing algorithm on the final mesh twice and on the preview 
 mesh once, as opposed to just the final mesh once when unchecked. Please note that smoothing will cause a 
 loss of detail.
-\item[Floating Pre-Simulation:] An experimental way to include floating capability from a separate fluid 
-simulation. (NOTE: This will not work if you haven't installed the simulation engine DualSPHysics. If you 
-really want to try this out, then please contact the authors for separate instructions.)
-\item[Retrieve Float Path:] Import the path of the floating object from the pre-simulation.
+\item[DualSPHysics \& Tangaroa:] These menus are for running external SPH simulations. They serve as an 
+example of how to incorporate other third-party engines, but they will not work without installing the 
+engines in question. Please contact the authors for further details.
 \item[Use Mask:] Use an integer mask to set up the simulation. If the mask file doesn't exist, it will be 
 created and saved for use in further simulations. This can drastically speed up the initiation of simulations 
 containing non-moving obstacles with high vertex counts.
@@ -254,6 +253,7 @@ directory (see below).
 (see below).
 \item[(VTK) Volume Fraction:] Write the volume fraction into a VTK output file.
 \item[(VTK) Velocity:] Write the velocities into a VTK output file.
+\item[(VTK) Speeds:] Write the velocity components (x, y, z) into three separate VTK files.
 \item[(VTK) Vorticity:] Write the vorticities into a VTK output file. All VTK output will be written in the 
 same files by frame, which will not be created at all if none of the VTK flags are checked.
 \item[Path:] Set the path to your local simulation directory here (the one where you compiled the Palabos 
@@ -279,13 +279,12 @@ retrieve the results with the button below.
 
 In addition to the explicit parameters, Palander also uses some of Blender's own simulation parameters. These 
 of course include all objects from the scene that have been flagged for fluid simulation, such as one domain, 
-any number of obstacles or fluids, one inflow, and one outflow. Furthermore, the following parameters are 
+any number of obstacles, fluids or inflows, and one outflow. Furthermore, the following parameters are 
 implicitly passed on to the Palabos simulation:
 \begin{description}
-\item[Fluid cache:] From the directory path in {\bf Fluid} on the ``Physics'' tab of the domain object.
-\item[Real World Size:] From {\bf Fluid World $\to$ Real World Size} on the ``Physics'' tab of the domain 
-object.
-\item[Inflow Velocity:] From {\bf Fluid} on the ``Physics'' tab of the inflow object.
+\item[Fluid cache:] From the directory path in {\bf Fluid} on the ``Physics'' tab of the domain.
+\item[Real World Size:] From {\bf Fluid World $\to$ Real World Size} on the ``Physics'' tab of the domain.
+\item[Inflow Velocity:] From {\bf Fluid} on the ``Physics'' tab of each inflow.
 \end{description}
 
 Also, Palander supports a certain number of different keyframe actions. These are

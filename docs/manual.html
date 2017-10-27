@@ -315,7 +315,7 @@ found on the &#8220;Physics&#8221; tab.
 water simulation happens. The sides of this cuboid act as walls for the fluid, but any non-fluid
 objects can exist partially or completely outside of the domain &#8212; the domain walls won&#8217;t
 affect them. For there to be any fluid inside of the domain, you need to put in one or more
-fluid objects or an inflow object. Then, you can use static or dynamic obstacle objects to
+fluid or inflow objects. Then, you can use static or dynamic obstacle objects to
 influence the motion of the fluid during the simulation, as long as this happens withing the
 confines of the domain.
 <!--l. 207--><p class="noindent" >
@@ -390,15 +390,11 @@ and on the preview mesh once, as opposed to just the final mesh once when
 unchecked. Please note that smoothing will cause a loss of detail.
 </dd><dt class="description">
 <span 
-class="cmbx-12">Floating Pre-Simulation:</span> </dt><dd 
-class="description">An experimental way to include floating capability from a
-separate fluid simulation. (NOTE: This will not work if you haven&#8217;t installed the
-simulation engine DualSPHysics. If you really want to try this out, then please
-contact the authors for separate instructions.)
-</dd><dt class="description">
-<span 
-class="cmbx-12">Retrieve Float Path:</span> </dt><dd 
-class="description">Import the path of the floating object from the pre-simulation.
+class="cmbx-12">DualSPHysics &amp; Tangaroa:</span> </dt><dd 
+class="description">These menus are for running external SPH simulations.
+They serve as an example of how to incorporate other third-party engines, but
+they will not work without installing the engines in question. Please contact
+the authors for further details.
 </dd><dt class="description">
 <span 
 class="cmbx-12">Use Mask:</span> </dt><dd 
@@ -439,6 +435,11 @@ class="description">Write the volume fraction into a VTK output file.
 <span 
 class="cmbx-12">(VTK) Velocity:</span> </dt><dd 
 class="description">Write the velocities into a VTK output file.
+
+</dd><dt class="description">
+<span 
+class="cmbx-12">(VTK) Speeds:</span> </dt><dd 
+class="description">Write the velocity components (x, y, z) into three separate VTK files.
 
 </dd><dt class="description">
 <span 
@@ -498,15 +499,13 @@ class="description">Click on this to retrieve the simulation results from Hazel 
  id="x1-130003.3"></a>Implicit Interface Parameters</h4>
 <!--l. 280--><p class="noindent" >In addition to the explicit parameters, Palander also uses some of Blender&#8217;s own simulation
 parameters. These of course include all objects from the scene that have been flagged for fluid
-simulation, such as one domain, any number of obstacles or fluids, one inflow, and one
-outflow. Furthermore, the following parameters are implicitly passed on to the Palabos
-simulation:
+simulation, such as one domain, any number of obstacles, fluids, or inflows, and one outflow.
+Furthermore, the following parameters are implicitly passed on to the Palabos simulation:
 <dl class="description"><dt class="description">
 <span 
 class="cmbx-12">Fluid cache:</span> </dt><dd 
 class="description">From the directory path in <span 
-class="cmbx-12">Fluid </span>on the &#8220;Physics&#8221; tab of the domain
-object.
+class="cmbx-12">Fluid </span>on the &#8220;Physics&#8221; tab of the domain.
 </dd><dt class="description">
 <span 
 class="cmbx-12">Real World Size:</span> </dt><dd 
@@ -514,12 +513,12 @@ class="description">From <span
 class="cmbx-12">Fluid World </span><span 
 class="cmsy-10x-x-120">&#x2192; </span><span 
 class="cmbx-12">Real World Size </span>on the &#8220;Physics&#8221; tab of
-the domain object.
+the domain.
 </dd><dt class="description">
 <span 
 class="cmbx-12">Inflow Velocity:</span> </dt><dd 
 class="description">From <span 
-class="cmbx-12">Fluid </span>on the &#8220;Physics&#8221; tab of the inflow object.</dd></dl>
+class="cmbx-12">Fluid </span>on the &#8220;Physics&#8221; tab of each inflow.</dd></dl>
 <!--l. 291--><p class="noindent" >Also, Palander supports a certain number of different keyframe actions. These are
 <dl class="description"><dt class="description">
 <span 
